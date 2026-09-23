@@ -13,6 +13,14 @@
     ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => 'Sou' + n),
     'Ton', 'Nan', 'Shaa', 'Pei', 'Haku', 'Hatsu', 'Chun',
   ];
+  // 패 그림을 처음에 모두 불러와 둔다. 처음 보는 패를 그 순간 불러오면
+  // 흰 패 몸통만 보였다가 그림이 뒤늦게 나타나기 때문 (특히 인터넷을 거칠 때)
+  const PRELOADED = [...TILE_FILES, 'Man5-Dora', 'Pin5-Dora', 'Sou5-Dora', 'Front'].map((name) => {
+    const im = new Image();
+    im.src = `tiles/${name}.svg`;
+    if (im.decode) im.decode().catch(() => {});
+    return im;
+  });
 
   let S;
 
@@ -64,6 +72,8 @@
   const pressed = (id) => $(id).getAttribute('aria-pressed') === 'true';
   const setPressed = (id, on) => $(id).setAttribute('aria-pressed', on ? 'true' : 'false');
   setPressed('btnAskCalls', load('mj-ask-calls', true));
+  const askCallsLabel = () => { $('btnAskCalls').textContent = pressed('btnAskCalls') ? '울기 ON' : '울기 OFF'; };
+  askCallsLabel();
   setPressed('btnJudge', load('mj-judge', false));
 
   // ---------- 패 그리기 ----------
@@ -77,6 +87,7 @@
       img.src = `tiles/${TILE_FILES[type]}${opts.red ? '-Dora' : ''}.svg`;
       img.alt = '';
       img.draggable = false;
+      img.decoding = 'sync';
       el.append(img);
       el.setAttribute('aria-label', MJ.tileName(type) + (opts.red ? ' (적)' : ''));
       el.title = MJ.tileName(type) + (opts.red ? ' (적도라)' : '');
@@ -1460,7 +1471,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=36');
+    worker = new Worker('sim.js?v=38');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1751,6 +1762,7 @@
   $('btnAskCalls').addEventListener('click', () => {
     setPressed('btnAskCalls', !pressed('btnAskCalls'));
     save('mj-ask-calls', pressed('btnAskCalls'));
+    askCallsLabel();
   });
   // 울기·리치 판단(시뮬레이션)은 무거워서 힌트와 따로 켜고 끈다
   $('btnJudge').addEventListener('click', () => {

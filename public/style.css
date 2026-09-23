@@ -49,7 +49,7 @@ body {
 #btnJudge[aria-pressed="true"], #btnAskCalls[aria-pressed="true"] {
   background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600;
 }
-#btnAskCalls[aria-pressed="false"] { text-decoration: line-through; opacity: 0.7; }
+#btnAskCalls[aria-pressed="false"] { opacity: 0.75; }
 .analysis-panel .analysis { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
 
 /* 최소 높이를 잡아 둘 때 남는 공간은 맨 아래로 (중간 요소가 늘어나지 않게) */
@@ -409,7 +409,12 @@ button.tile.glow { box-shadow: 0 0 0 3px var(--accent), 0 calc(var(--w) * 0.07) 
 
 /* ---------- 힌트 ---------- */
 .hint table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.hint th { text-align: left; color: var(--muted); font-weight: 500; padding: 4px 6px; }
+.hint th { text-align: left; color: var(--muted); font-weight: 500; padding: 4px 6px; white-space: nowrap; }
+/* 칸 제목·숫자는 줄바꿈하지 않고, 유효패 그림 칸만 여러 줄로 */
+.hint td, .analysis td { white-space: nowrap; }
+.hint td.mini { white-space: normal; width: 100%; }
+.analysis table { width: 100%; border-collapse: collapse; }
+.analysis th { white-space: nowrap; }
 .hint td { padding: 4px 6px; border-top: 1px solid rgba(255,255,255,.08); vertical-align: middle; }
 .hint td .tile { --w: 26px; }
 .hint td.mini { display: flex; flex-wrap: wrap; gap: 2px; }
@@ -559,4 +564,9 @@ table.settle.final td { font-size: 1.05rem; }
   .meld { --tw: 26px; }
   button.tile:not(:disabled):hover { transform: translateY(-6px); }
   .status { min-height: 64px; }
+  .hint table, .analysis table { font-size: 0.78rem; }
+  .hint th, .hint td { padding: 3px 3px; }
+  .hint td .tile { --w: 20px; }
+  .hint td.mini .tile { --w: 14px; }
+  .actions button { padding: 7px 11px; font-size: 0.88rem; }
 }
