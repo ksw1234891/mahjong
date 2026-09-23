@@ -1256,7 +1256,7 @@
   function restoreGame() {
     const g = load('mj-game', null);
     if (!g || g.v !== SAVE_VERSION || !g.hand) return false;
-    S = { ...g, timer: null, banned: g.banned ? new Set(g.banned) : null };
+    S = { ...g, timer: null, banned: g.banned ? new Set(g.banned) : null, hintMinH: 0, mainMinH: 0 };
     setSelect('mode', S.mode, '4p');
     setSelect('oppLevel', S.level, 'off');
     S.level = $('oppLevel').value;
@@ -1345,6 +1345,45 @@
     highlightHint(typeOf(id));
   }
 
+  // ---------- 드래그로 버리기: 패를 위로 끌어올렸다 놓으면 버린다 ----------
+  const DRAG_START = 8;      // 이만큼 움직이면 드래그로 본다 (px)
+  const DRAG_DISCARD = 60;   // 이만큼 위로 올리고 놓으면 버린다 (px)
+  let suppressClick = false;
+  function startDrag(e, el, id) {
+    if (el.disabled || e.button > 0) return;
+    const x0 = e.clientX, y0 = e.clientY;
+    let dragging = false;
+    const move = (ev) => {
+      const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (!dragging && Math.hypot(dx, dy) < DRAG_START) return;
+      if (!dragging) {
+        dragging = true;
+        try { el.setPointerCapture(e.pointerId); } catch { /* 이미 해제됨 */ }
+        el.classList.add('dragging');
+      }
+      el.style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
+      el.classList.toggle('will-discard', -dy >= DRAG_DISCARD);
+    };
+    const up = (ev) => {
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      if (!dragging) return;
+      suppressClick = true;   // 드래그 뒤 따라오는 click은 무시
+      setTimeout(() => { suppressClick = false; }, 0);
+      const dy = ev.clientY - y0;
+      el.classList.remove('dragging', 'will-discard');
+      el.style.transform = '';
+      if (ev.type === 'pointerup' && -dy >= DRAG_DISCARD) {
+        selectedId = null;
+        discard(id);
+      }
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  }
+
   function renderHand() {
     // 차례가 바뀌면 선택 해제
     if (S.phase !== 'self' || !handIds().includes(selectedId)) selectedId = null;
@@ -1373,7 +1412,11 @@
       el.dataset.type = typeOf(id);
       el.dataset.id = id;
       if (id === selectedId) el.classList.add('selected');
-      el.addEventListener('click', () => tapTile(id));
+      el.addEventListener('click', () => {
+        if (suppressClick) { suppressClick = false; return; }
+        tapTile(id);
+      });
+      el.addEventListener('pointerdown', (e) => startDrag(e, el, id));
       el.addEventListener('mouseenter', () => highlightHint(typeOf(id)));
       el.addEventListener('mouseleave', () => highlightHint(null));
       box.append(el);
@@ -1496,7 +1539,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=45');
+    worker = new Worker('sim.js?v=47');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1612,17 +1655,16 @@
     }
   }
 
-  // 한 판 동안 힌트 영역이 줄어들지 않게 해서, 페이지가 짧아지며 스크롤이 위로 끌려가는 걸 막는다
+  // 힌트가 열려 있는 동안만, 한 판 안에서 힌트 표 높이가 줄어들지 않게 한다
+  // (페이지가 짧아지며 스크롤이 위로 끌려가는 것 방지). 닫혀 있으면 아무 공간도 잡지 않는다
   function keepHintHeight() {
     const panel = $('hintPanel');
-    if (!panel.hidden) {
-      S.hintMinH = Math.max(S.hintMinH || 0, panel.offsetHeight);
-      panel.style.minHeight = S.hintMinH + 'px';
+    if (panel.hidden) {
+      panel.style.minHeight = '';
+      return;
     }
-    // 페이지 전체도 한 판 동안은 줄어들지 않게 한다 (맨 아래로 스크롤해 둔 상태 유지)
-    const main = document.querySelector('main');
-    S.mainMinH = Math.max(S.mainMinH || 0, main.offsetHeight);
-    main.style.minHeight = S.mainMinH + 'px';
+    S.hintMinH = Math.max(S.hintMinH || 0, panel.offsetHeight);
+    panel.style.minHeight = S.hintMinH + 'px';
   }
 
   // ---------- 방총 위험률 추정 (보이는 정보만 사용) ----------

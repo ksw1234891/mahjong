@@ -2,7 +2,7 @@
 // 보이지 않는 패(산 + 상대 손패)를 무작위로 섞어 남은 국면을 끝까지 진행해 본다.
 // 가정: 상대는 화료·울기를 하지 않고, 버림패는 보이지 않는 패 중 무작위 한 장.
 //       나는 샹텐이 가장 낮아지는 패를 버리고, 텐파이면 살아 있는 대기 매수가 많은 쪽을 고른다.
-importScripts('mahjong.js?v=45');
+importScripts('mahjong.js?v=47');
 const { shanten, waits, evaluate } = MJ;
 
 const TARGET_SIMS = 400;

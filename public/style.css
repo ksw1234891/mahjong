@@ -455,6 +455,10 @@ button.tile:hover .tile-info, button.tile:focus-visible .tile-info, button.tile.
 /* 선택·마우스를 올린 패는 맨 위 층으로 (두 줄일 때 아랫줄 패에 정보가 가려지지 않게) */
 .hand button.tile:hover, .hand button.tile.selected { z-index: 40; }
 button.tile.selected { transform: translateY(-12px); box-shadow: 0 0 0 3px #fff, 0 calc(var(--w) * 0.07) 0 #c9a45c; }
+/* 드래그로 버리기 */
+.hand button.tile { touch-action: none; }
+.hand button.tile.dragging { z-index: 60; transition: none; cursor: grabbing; box-shadow: 0 10px 24px rgba(0,0,0,.55); }
+.hand button.tile.will-discard { box-shadow: 0 0 0 3px var(--accent), 0 0 24px 6px rgba(242, 193, 78, .8); }
 /* 길게 눌러도 브라우저 메뉴·글자 선택이 뜨지 않게 */
 .tile, .hand { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 @media (hover: none) {
