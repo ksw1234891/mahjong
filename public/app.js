@@ -13,14 +13,23 @@
     ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => 'Sou' + n),
     'Ton', 'Nan', 'Shaa', 'Pei', 'Haku', 'Hatsu', 'Chun',
   ];
-  // 패 그림을 처음에 모두 불러와 둔다. 처음 보는 패를 그 순간 불러오면
-  // 흰 패 몸통만 보였다가 그림이 뒤늦게 나타나기 때문 (특히 인터넷을 거칠 때)
-  const PRELOADED = [...TILE_FILES, 'Man5-Dora', 'Pin5-Dora', 'Sou5-Dora', 'Front'].map((name) => {
+  // 패 그림(SVG)은 새 요소가 생길 때마다 그 크기로 다시 그려져서, 그 한 박자 동안
+  // 흰 패 몸통만 보인다. 그래서 처음에 한 번씩 비트맵(canvas)으로 그려 두고,
+  // 패를 만들 때는 그 비트맵을 즉시 복사한다 (기다림 없이 바로 그려짐)
+  const FACE_W = 180, FACE_H = 240;
+  const BITMAPS = {};
+  for (const name of [...TILE_FILES, 'Man5-Dora', 'Pin5-Dora', 'Sou5-Dora']) {
     const im = new Image();
+    im.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = FACE_W;
+      c.height = FACE_H;
+      c.getContext('2d').drawImage(im, 0, 0, FACE_W, FACE_H);
+      BITMAPS[name] = c;
+    };
     im.src = `tiles/${name}.svg`;
-    if (im.decode) im.decode().catch(() => {});
-    return im;
-  });
+  }
+  new Image().src = 'tiles/Front.svg';
 
   let S;
 
@@ -116,12 +125,23 @@
     if (opts.back) {
       el.classList.add('back');
     } else {
-      const img = document.createElement('img');
-      img.src = `tiles/${TILE_FILES[type]}${opts.red ? '-Dora' : ''}.svg`;
-      img.alt = '';
-      img.draggable = false;
-      img.decoding = 'sync';
-      el.append(img);
+      const name = `${TILE_FILES[type]}${opts.red ? '-Dora' : ''}`;
+      const bmp = BITMAPS[name];
+      if (bmp) {
+        const c = document.createElement('canvas');
+        c.className = 'face';
+        c.width = FACE_W;
+        c.height = FACE_H;
+        c.getContext('2d').drawImage(bmp, 0, 0);
+        el.append(c);
+      } else {
+        // 비트맵이 아직 준비되지 않았으면 (처음 1~2초) 그림 파일로
+        const img = document.createElement('img');
+        img.src = `tiles/${name}.svg`;
+        img.alt = '';
+        img.draggable = false;
+        el.append(img);
+      }
       el.setAttribute('aria-label', MJ.tileName(type) + (opts.red ? ' (적)' : ''));
       el.title = MJ.tileName(type) + (opts.red ? ' (적도라)' : '');
     }
@@ -1596,7 +1616,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=71');
+    worker = new Worker('sim.js?v=73');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
