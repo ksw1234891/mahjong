@@ -1335,7 +1335,7 @@
   const TOUCH = window.matchMedia('(hover: none)').matches;
   let selectedId = null;
   function tapTile(id) {
-    if (!(TOUCH && pressed('btnHint')) || selectedId === id) {
+    if (!(TOUCH && pressed('btnDanger')) || selectedId === id) {
       selectedId = null;
       return discard(id);
     }
@@ -1398,7 +1398,10 @@
         const info = document.createElement('span');
         info.className = 'tile-info';
         info.append(Object.assign(document.createElement('span'), { className: 'left', textContent: `남은 ${Math.max(0, 4 - vis[t])}` }));
-        if (risk) info.append(Object.assign(document.createElement('span'), { className: 'risk ' + riskClass(risk[t]), textContent: riskText(risk[t]) }));
+        if (risk) {
+          info.append(Object.assign(document.createElement('span'), { className: 'risk ' + riskClass(risk[t]), textContent: riskText(risk[t]) }));
+          el.dataset.risk = riskClass(risk[t]);   // 드래그할 때 테두리 색
+        }
         el.append(info);
       }
       if (!el.disabled && furitenSet.has(typeOf(id))) {
@@ -1422,7 +1425,8 @@
     };
     const canWin = canTsumo();
     const furitenSet = furitenDiscards();
-    const showInfo = $('btnHint').getAttribute('aria-pressed') === 'true' && S.phase === 'self' && !S.riichi;
+    // 위험도 표시: 힌트 표와 별개로, 손패에 마우스를 올리거나 끌 때 보인다
+    const showInfo = pressed('btnDanger') && S.phase === 'self' && !S.riichi;
     const vis = showInfo ? visibleCounts() : null;
     const risk = showInfo ? riskByType(vis) : null;
     for (const id of S.hand) addTile(id, false);
@@ -1436,8 +1440,6 @@
       box.append(slot);
     }
     box.classList.toggle('selecting', !!glow);
-    // 힌트를 켜 두면 차례와 상관없이 아래 공간을 유지해서 버튼 위치가 흔들리지 않게 한다
-    box.classList.toggle('with-info', $('btnHint').getAttribute('aria-pressed') === 'true');
 
     const melds = $('melds');
     melds.innerHTML = '';
@@ -1538,7 +1540,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=49');
+    worker = new Worker('sim.js?v=52');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1831,6 +1833,13 @@
     askCallsLabel();
   });
   // 울기·리치 판단(시뮬레이션)은 무거워서 힌트와 따로 켜고 끈다
+  setPressed('btnDanger', load('mj-danger', true));
+  $('btnDanger').addEventListener('click', () => {
+    setPressed('btnDanger', !pressed('btnDanger'));
+    save('mj-danger', pressed('btnDanger'));
+    selectedId = null;
+    renderHand();
+  });
   $('btnJudge').addEventListener('click', () => {
     setPressed('btnJudge', !pressed('btnJudge'));
     save('mj-judge', pressed('btnJudge'));

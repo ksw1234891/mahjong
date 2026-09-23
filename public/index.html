@@ -8,7 +8,7 @@
   <title>리치마작</title>
   <meta name="description" content="컴퓨터 상대 3명과 두는 일본식 리치마작">
   <link rel="icon" href="tiles/Chun.svg">
-  <link rel="stylesheet" href="style.css?v=49">
+  <link rel="stylesheet" href="style.css?v=52">
 </head>
 <body>
   <header class="bar">
@@ -83,7 +83,8 @@
         <div id="melds" class="melds"></div>
       </div>
       <div class="actions" id="actions">
-        <button id="btnHint" aria-pressed="false">힌트</button>
+        <button id="btnHint" aria-pressed="false" title="타패 후보·유효패 표">힌트</button>
+        <button id="btnDanger" aria-pressed="true" title="손패에 마우스를 올리거나 끌 때 남은 장수·위험률 표시">위험도</button>
         <button id="btnJudge" aria-pressed="false" title="울기·리치를 할지 기대점수로 비교 (시뮬레이션이라 계산이 무거움)">기대값</button>
         <button id="btnAskCalls" aria-pressed="true" title="끄면 퐁·치·깡을 묻지 않고 넘김 (론은 항상 물어봄)">울기 ON</button>
       </div>
@@ -110,7 +111,7 @@
     </div>
   </dialog>
 
-  <script src="mahjong.js?v=49"></script>
-  <script src="app.js?v=49"></script>
+  <script src="mahjong.js?v=52"></script>
+  <script src="app.js?v=52"></script>
 </body>
 </html>

@@ -470,6 +470,12 @@ button.tile.selected { transform: translateY(-12px); box-shadow: 0 0 0 3px #fff,
 .hand button.tile { touch-action: none; }
 .hand button.tile.dragging { z-index: 60; transition: none; cursor: grabbing; box-shadow: 0 10px 24px rgba(0,0,0,.55); }
 .hand button.tile.will-discard { box-shadow: 0 0 0 3px var(--accent), 0 0 24px 6px rgba(242, 193, 78, .8); }
+/* 드래그하는 동안 남은 장수·위험률을 보이고, 위험도에 따라 테두리 색 */
+.hand button.tile.dragging .tile-info { opacity: 1; transition: none; }
+.hand button.tile.dragging[data-risk="safe"] { box-shadow: 0 0 0 4px #4fd08a, 0 10px 24px rgba(0,0,0,.55); }
+.hand button.tile.dragging[data-risk="low"] { box-shadow: 0 0 0 4px #bde39a, 0 10px 24px rgba(0,0,0,.55); }
+.hand button.tile.dragging[data-risk="mid"] { box-shadow: 0 0 0 4px #ffd257, 0 10px 24px rgba(0,0,0,.55); }
+.hand button.tile.dragging[data-risk="high"] { box-shadow: 0 0 0 4px #ff5a4f, 0 0 22px 4px rgba(255, 90, 79, .7), 0 10px 24px rgba(0,0,0,.55); }
 /* 길게 눌러도 브라우저 메뉴·글자 선택이 뜨지 않게 */
 .tile, .hand { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 @media (hover: none) {
@@ -478,7 +484,7 @@ button.tile.selected { transform: translateY(-12px); box-shadow: 0 0 0 3px #fff,
   button.tile.selected:not(:disabled):hover { transform: translateY(-12px); }
   .tile-info { transition: none; }
   button.tile:hover .tile-info { opacity: 0; }
-  button.tile.selected .tile-info, button.tile.selected:hover .tile-info { opacity: 1; }
+  button.tile.selected .tile-info, button.tile.selected:hover .tile-info, .hand button.tile.dragging .tile-info { opacity: 1; }
 }
 .risk.safe { color: #7fe0a8; font-weight: 700; }
 .risk.low { color: #bde39a; }
