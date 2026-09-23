@@ -52,10 +52,19 @@
     try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* 저장 불가 환경 */ }
   }
   let stats = Object.assign({ games: 0, wins: 0, best: 0, dealIns: 0, net: 0 }, load('mj-stats', {}));
-  $('mode').value = load('mj-mode', '4p');
-  $('oppLevel').value = load('mj-opp-level', 'off');
-  $('matchType').value = load('mj-match-type', 'hanchan');
-  $('askCalls').checked = load('mj-ask-calls', true);
+  // 저장된 값이 선택지에 없으면(예전 버전 등) 기본값으로
+  function setSelect(id, value, fallback) {
+    const el = $(id);
+    el.value = value;
+    if (el.selectedIndex < 0) el.value = fallback;
+  }
+  setSelect('mode', load('mj-mode', '4p'), '4p');
+  setSelect('oppLevel', load('mj-opp-level', 'off'), 'off');
+  setSelect('matchType', load('mj-match-type', 'hanchan'), 'hanchan');
+  const pressed = (id) => $(id).getAttribute('aria-pressed') === 'true';
+  const setPressed = (id, on) => $(id).setAttribute('aria-pressed', on ? 'true' : 'false');
+  setPressed('btnAskCalls', load('mj-ask-calls', true));
+  setPressed('btnJudge', load('mj-judge', false));
 
   // ---------- 패 그리기 ----------
   function tileEl(type, opts = {}) {
@@ -474,11 +483,61 @@
     return best ? best.t : bestByShanten(c, melds);
   }
 
+  // 손에 든 도라 수 (적도라·부로 포함) — 밀지 오릴지 판단할 때 손의 값어치
+  function oppHandValue(p) {
+    const ids = [...S.opp[p], ...S.oppMelds[p].flatMap((m) => m.ids)];
+    const dora = doraIndicators().map(MJ.doraFromIndicator);
+    return ids.filter(isRed).length + ids.reduce((n, id) => n + dora.filter((d) => d === typeOf(id)).length, 0);
+  }
+
+  // p 입장에서 패 t를 버렸을 때 누군가에게 론당할 확률 (플레이어 힌트와 같은 추정식)
+  function riskFor(p, t, vis) {
+    let safeProb = 1;
+    for (let q = 0; q < 4; q++) {
+      if (q === p) continue;
+      safeProb *= 1 - tenpaiGuess(q) * tileDanger(t, q, vis);
+    }
+    return 1 - safeProb;
+  }
+
+  // 매우 어려움: 위협(리치·2부로 이상)이 있으면 손 상태와 값으로 밀지 오릴지 정하고,
+  // 평소에도 유효패가 거의 같으면 더 안전한 패를 먼저 버린다
+  function expertDiscard(p, c, melds, banned, plan) {
+    const vis = visibleForOpp(p);
+    const opts = MJ.discardOptions(c, vis, melds, banned);
+    if (!opts.length) return bestByShanten(c, melds, banned, plan);
+    const openCount = (q) => (q === 0 ? S.melds : S.oppMelds[q]).filter((m) => m.kind !== 'ankan').length;
+    const threats = [0, 1, 2, 3].filter((q) => q !== p && (isRiichi(q) || openCount(q) >= 2));
+    const sh = opts[0].shanten;
+    const risk = (t) => riskFor(p, t, vis);
+    if (threats.length) {
+      const value = oppHandValue(p);
+      const riichiThreats = threats.filter(isRiichi).length;
+      // 밀 후보: 샹텐 유지 + 유효패 70% 이상인 패 중 가장 안전한 패
+      const keep = opts.filter((o) => o.shanten === sh && o.total >= opts[0].total * 0.7)
+        .sort((a, b) => risk(a.type) - risk(b.type))[0];
+      const keepRisk = risk(keep.type);
+      // 얼마나 위험해도 밀지: 텐파이이고 손이 비쌀수록, 리치한 사람이 적을수록 더 민다
+      let limit = 0;
+      if (sh === 0) limit = value >= 2 ? 0.2 : value === 1 ? 0.12 : 0.06;
+      else if (sh === 1 && value >= 2) limit = 0.05;
+      if (riichiThreats >= 2) limit /= 2;
+      if (riichiThreats === 0) limit = Math.max(limit, 0.1);   // 부로 상대뿐이면 좀 더 민다
+      if (keepRisk <= limit) return keep.type;
+      // 오리기: 가장 안전한 패, 같으면 샹텐을 덜 망가뜨리는 패
+      return opts.slice().sort((a, b) => risk(a.type) - risk(b.type) || a.shanten - b.shanten)[0].type;
+    }
+    // 위협 없음: 유효패 90% 이상 후보 중 역 계획에 맞고 안전한 패
+    const ok = opts.filter((o) => o.shanten === sh && o.total >= opts[0].total * 0.9);
+    return ok.sort((a, b) => (offPlan(plan, b.type) - offPlan(plan, a.type)) || risk(a.type) - risk(b.type))[0].type;
+  }
+
   // 강도별 타패 선택
   function oppDiscardType(p, banned) {
     const c = MJ.toCounts(S.opp[p]);
     const melds = oppMeldCount(p);
     const plan = openPlan(p);
+    if (S.level === 'expert' && oppActive()) return expertDiscard(p, c, melds, banned, plan);
     const threats = threatsFor(p);
     const sh = MJ.shanten(c, melds);
     const lvl = S.level;
@@ -532,6 +591,16 @@
         return MJ.evaluate({ ...oppCtx(p, S.opp[p], w * 4, false), counts: cc, winTile: w, riichi: false });
       });
       if (damaOk && Math.random() < 0.5) return false;
+    }
+    if (S.level === 'expert') {
+      const ws = MJ.waits(c, melds);
+      const damaHan = ws.map((w) => {
+        const cc = c.slice();
+        cc[w]++;
+        const r = MJ.evaluate({ ...oppCtx(p, S.opp[p], w * 4, false), counts: cc, winTile: w, riichi: false });
+        return r ? r.han : 0;
+      });
+      if (damaHan.length && damaHan.every((h) => h >= 3)) return false;
     }
     return true;
   }
@@ -592,7 +661,20 @@
     const before = MJ.shanten(c, melds);
     const lvl = S.level;
     // 멘젠으로 리치가 보이면 (어려움) 역패 말고는 참는다
-    const holdMenzen = lvl === 'hard' && oppMenzen(q) && before <= 1;
+    const expert = lvl === 'expert';
+    const holdMenzen = (lvl === 'hard' || expert) && oppMenzen(q) && before <= 1;
+    const worth = (rest, newMelds) => {
+      if (!expert) return true;
+      if (oppHandValue(q) >= 1) return true;
+      // 혼일색 계획이면 값어치가 있다
+      const tilesOf = (m) => (m.kind === 'chi' ? [m.tile, m.tile + 1, m.tile + 2] : [m.tile]);
+      const suits = new Set(newMelds.flatMap(tilesOf).filter((x) => x < 27).map((x) => Math.floor(x / 9)));
+      if (suits.size !== 1) return false;
+      const s0 = [...suits][0];
+      let off = 0;
+      for (let x = 0; x < 27; x++) if (Math.floor(x / 9) !== s0) off += rest[x];
+      return off <= 2;
+    };
     const willing = () => Math.random() < (lvl === 'easy' ? 0.35 : 1);
     const tryCall = (remove, meld) => {
       const rest = c.slice();
@@ -613,13 +695,13 @@
         if (Math.random() < (lvl === 'easy' ? 0.6 : 1)) return { kind: 'pon' };
       } else if (!holdMenzen) {
         const r = tryCall([t, t], { kind: 'pon', tile: t });
-        if (r.after < before && hasYakuPath(q, r.rest, r.newMelds) && willing()) return { kind: 'pon' };
+        if (r.after < before && hasYakuPath(q, r.rest, r.newMelds) && worth(r.rest, r.newMelds) && willing()) return { kind: 'pon' };
       }
     }
     if ((from + 1) % 4 === q && !holdMenzen) {
       for (const pair of chiPairsIn(c, t)) {
         const r = tryCall(pair, { kind: 'chi', tile: Math.min(t, pair[0]) });
-        if (r.after < before && hasYakuPath(q, r.rest, r.newMelds) && willing()) return { kind: 'chi', pair };
+        if (r.after < before && hasYakuPath(q, r.rest, r.newMelds) && worth(r.rest, r.newMelds) && willing()) return { kind: 'chi', pair };
       }
     }
     return null;
@@ -831,7 +913,7 @@
     const o = {};
     if (playerRon) o.ron = true;
     // 다른 사람이 론할 수 있는 패는 울 수 없다 (론이 우선)
-    if (remaining() > 0 && !S.riichi && !someoneElseRons && $('askCalls').checked) {
+    if (remaining() > 0 && !S.riichi && !someoneElseRons && pressed('btnAskCalls')) {
       const n = S.hand.filter((x) => typeOf(x) === t).length;
       if (n >= 2) o.pon = true;
       if (n >= 3 && S.kanCount < 4) o.kan = true;
@@ -1160,8 +1242,9 @@
     const g = load('mj-game', null);
     if (!g || g.v !== SAVE_VERSION || !g.hand) return false;
     S = { ...g, timer: null, banned: g.banned ? new Set(g.banned) : null };
-    $('mode').value = S.mode;
-    $('oppLevel').value = S.level;
+    setSelect('mode', S.mode, '4p');
+    setSelect('oppLevel', S.level, 'off');
+    S.level = $('oppLevel').value;
     if (M) $('matchType').value = M.type;
     render();
     if (S.phase === 'over' && S.finalShown && M) showFinal();
@@ -1369,21 +1452,19 @@
     const on = $('btnHint').getAttribute('aria-pressed') === 'true';
     const panel = $('hintPanel');
     panel.hidden = !on;
-    if (on) {
-      renderAnalysis();
-      renderDiscardTable();
-    }
+    renderAnalysis();
+    if (on) renderDiscardTable();
     keepHintHeight();
   }
 
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=28');
+    worker = new Worker('sim.js?v=36');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
-      if (!$('hintPanel').hidden) { drawAnalysis(); keepHintHeight(); }
+      if (!$('analysisPanel').hidden) { drawAnalysis(); keepHintHeight(); }
     };
     worker.onerror = () => { worker = null; };
   } catch { worker = null; /* file:// 로 열면 워커를 쓸 수 없다 */ }
@@ -1428,9 +1509,10 @@
 
   function renderAnalysis() {
     const box = $('analysis');
-    const req = analysisRequest();
-    if (!req) { box.hidden = true; return; }
-    box.hidden = false;
+    const panel = $('analysisPanel');
+    const req = pressed('btnJudge') ? analysisRequest() : null;
+    if (!req) { panel.hidden = true; return; }
+    panel.hidden = false;
     if (!worker) {
       box.innerHTML = '<div class="label">판단 계산은 서버(Docker 등)로 열었을 때만 동작해요</div>';
       return;
@@ -1513,7 +1595,7 @@
     if (isRiichi(q)) return 1;
     const n = S.rivers[q].length;
     const base = n <= 5 ? 0.03 : n <= 8 ? 0.12 : n <= 11 ? 0.28 : 0.45;
-    const k = S.oppMelds[q].filter((m) => m.kind !== 'ankan').length;
+    const k = (q === 0 ? S.melds : S.oppMelds[q]).filter((m) => m.kind !== 'ankan').length;
     return k >= 3 ? Math.max(base, 0.6) : Math.min(0.9, base + k * 0.1);
   }
 
@@ -1666,7 +1748,22 @@
   $('mode').addEventListener('change', () => { save('mj-mode', $('mode').value); newMatch(); });
   $('oppLevel').addEventListener('change', () => { save('mj-opp-level', $('oppLevel').value); newMatch(); });
   $('matchType').addEventListener('change', () => { save('mj-match-type', $('matchType').value); newMatch(); });
-  $('askCalls').addEventListener('change', () => save('mj-ask-calls', $('askCalls').checked));
+  $('btnAskCalls').addEventListener('click', () => {
+    setPressed('btnAskCalls', !pressed('btnAskCalls'));
+    save('mj-ask-calls', pressed('btnAskCalls'));
+  });
+  // 울기·리치 판단(시뮬레이션)은 무거워서 힌트와 따로 켜고 끈다
+  $('btnJudge').addEventListener('click', () => {
+    setPressed('btnJudge', !pressed('btnJudge'));
+    save('mj-judge', pressed('btnJudge'));
+    renderAnalysis();
+  });
+  // 모바일: 설정 메뉴 열고 닫기
+  $('btnMenu').addEventListener('click', () => {
+    const open = !document.querySelector('.bar').classList.contains('open');
+    document.querySelector('.bar').classList.toggle('open', open);
+    $('btnMenu').setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
   $('btnTsumo').addEventListener('click', tsumo);
   $('btnRiichi').addEventListener('click', () => { S.riichiSelect = !S.riichiSelect; render(); });
   $('btnHint').addEventListener('click', (e) => {

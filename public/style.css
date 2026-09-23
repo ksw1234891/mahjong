@@ -45,9 +45,15 @@ body {
 }
 .bar h1 { font-size: 1.15rem; margin: 0; letter-spacing: 0.02em; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer; }
+.menu-btn { display: none; font-size: 1.3rem; padding: 4px 12px; line-height: 1; }
+#btnJudge[aria-pressed="true"], #btnAskCalls[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600;
+}
+#btnAskCalls[aria-pressed="false"] { text-decoration: line-through; opacity: 0.7; }
+.analysis-panel .analysis { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
 
-main { max-width: 1000px; margin: 0 auto; padding: 0 16px 32px; display: grid; gap: 12px; }
+/* 최소 높이를 잡아 둘 때 남는 공간은 맨 아래로 (중간 요소가 늘어나지 않게) */
+main { max-width: 1000px; margin: 0 auto; padding: 0 16px 32px; display: grid; gap: 12px; align-content: start; }
 .panel { background: var(--panel); border-radius: 12px; padding: 12px; }
 .label { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
 .muted { color: var(--muted); font-size: 0.85em; }
@@ -211,7 +217,7 @@ button.ghost { background: transparent; }
 /* ---------- 선언 애니메이션 ---------- */
 .table { position: relative; }
 .callout {
-  position: absolute; z-index: 20; pointer-events: none;
+  position: absolute; z-index: 100; pointer-events: none;
   transform: translate(-50%, -50%);
   animation: callout-pop 1.3s ease-out forwards;
 }
@@ -224,9 +230,19 @@ button.ghost { background: transparent; }
   display: block; padding: 6px 26px; border-radius: 16px;
   font-size: clamp(2.6rem, 9vw, 4.6rem); font-weight: 900; letter-spacing: 0.06em; white-space: nowrap;
   color: #fff;
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--c) 55%, transparent) 0%, transparent 70%);
-  -webkit-text-stroke: 2px color-mix(in srgb, var(--c) 60%, #000);
-  text-shadow: 0 0 12px var(--c), 0 0 32px var(--c), 0 4px 0 rgba(0,0,0,.45);
+  /* 뒤의 패가 비치지 않도록 불투명한 판 + 흐림 */
+  background:
+    radial-gradient(ellipse at center, color-mix(in srgb, var(--c) 45%, transparent) 0%, transparent 75%),
+    rgba(12, 16, 14, 0.9);
+  border: 2px solid color-mix(in srgb, var(--c) 80%, #fff);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--c) 70%, transparent), 0 10px 30px rgba(0,0,0,.6);
+  backdrop-filter: blur(6px);
+  /* 한글은 text-stroke를 쓰면 획이 겹친 곳이 구겨져 보이므로, 그림자를 겹쳐 외곽선을 만든다 */
+  --o: color-mix(in srgb, var(--c) 55%, #000);
+  text-shadow:
+    2px 0 0 var(--o), -2px 0 0 var(--o), 0 2px 0 var(--o), 0 -2px 0 var(--o),
+    1.5px 1.5px 0 var(--o), -1.5px 1.5px 0 var(--o), 1.5px -1.5px 0 var(--o), -1.5px -1.5px 0 var(--o),
+    0 0 14px var(--c), 0 0 30px var(--c);
 }
 .callout.riichi span { --c: #ff5a4f; }
 .callout.pon span { --c: #4f9dff; }
@@ -317,7 +333,7 @@ button.tile.winning {
 }
 .callout.riichi span, .callout.tsumo span, .callout.ron span { animation: glow-burst 1.3s ease-out; }
 @keyframes glow-burst {
-  0% { filter: brightness(3) saturate(2); }
+  0% { filter: brightness(1.8); }
   30% { filter: brightness(1.4); }
   100% { filter: none; }
 }
@@ -364,8 +380,9 @@ button.tile.winning {
 .call-btn.chi  { background: linear-gradient(#4fd08a, #229359); }
 .call-btn.kan  { background: linear-gradient(#b38cff, #7b4fd6); }
 .call-btn.skip {
-  background: rgba(255,255,255,.1); color: var(--text); font-weight: 600;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 4px 10px rgba(0,0,0,.25); text-shadow: none;
+  /* 반투명이면 뒤의 버림패가 비쳐 보이므로 불투명하게 */
+  background: linear-gradient(#3b4a43, #26312c); color: var(--text); font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 4px 10px rgba(0,0,0,.35); text-shadow: none;
 }
 .call-btn .tile { --w: 22px; box-shadow: none; margin-left: 2px; }
 .call-btn.option { padding: 8px 16px; }
@@ -496,29 +513,50 @@ table.settle.final td { font-size: 1.05rem; }
 
 /* ---------- 좁은 화면: 테이블을 세로로 쌓기 ---------- */
 @media (max-width: 640px) {
+  /* 설정은 햄버거 메뉴 안에 */
+  .bar { padding: 8px 16px; }
+  .menu-btn { display: inline-flex; }
+  .controls { display: none; width: 100%; }
+  .bar.open .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bar.open .controls > * { width: 100%; justify-content: center; }
+
+  /* 테이블: 데스크톱과 같은 작탁 배치를 화면 폭에 맞춰 축소 */
+  main { padding: 0 8px 24px; }
   .table {
-    --rw: 21px;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto;
-    grid-template-areas: "center center" "left top" "right bottom";
-    padding: 10px;
-    border-width: 8px;
+    --rw: max(11px, calc((100vw - 84px) / 18.4));
+    --center: calc(var(--rw) * 8.2);
+    gap: 3px; padding: 8px; border-width: 6px; border-radius: 16px;
   }
-  .seat { min-height: calc(var(--rh) * 3 + 30px); padding-top: 22px; }
-  .seat .seat-label {
-    display: inline-block; position: absolute; left: 2px; top: 0;
-    font-size: 0.72rem; color: var(--muted);
-    background: rgba(0,0,0,.3); border-radius: 999px; padding: 1px 8px;
-  }
-  .seat.turn .seat-label { background: var(--accent); color: var(--accent-text); font-weight: 600; }
-  .river-box { position: static; }
-  .river, .seat-0 .river, .seat-1 .river, .seat-2 .river, .seat-3 .river {
-    position: static; transform: none; width: auto; height: auto; max-width: calc(var(--rw) * 6 + 16px);
-  }
-  .center { padding: 10px; }
-  .winds { display: none; }
-  .table.solo { grid-template-columns: 1fr; grid-template-rows: auto auto; }
-  .hand { gap: 1px; }
-  .hand .drawn { margin-left: calc(var(--tw) * 0.25); }
+  .river { gap: 1px; padding: 1px; }
+  .river .tile { box-shadow: 0 1px 0 #c9a45c; }
+  .river-melds .meld { --tw: var(--rw); }
+  .center { border-radius: 10px; }
+  .winds .w { font-size: 0.55rem; padding: 1px 5px; gap: 2px; }
+  .winds .w b { font-size: 0.8rem; }
+  .winds .w .pts { margin-left: 2px; }
+  .winds .w0 { bottom: 3px; }
+  .winds .w2 { top: 3px; }
+  .winds .w1 { transform: translate(calc(50% - 11px), -50%) rotate(-90deg); }
+  .winds .w3 { transform: translate(calc(-50% + 11px), -50%) rotate(90deg); }
+  .winds .w.riichi b::after { font-size: 0.5rem; }
+  .center-info { gap: 3px; }
+  .round-info { font-size: 0.55rem; }
+  .lcd { padding: 1px 6px; }
+  .lcd-label { font-size: 0.55rem; }
+  .lcd b { font-size: 1rem; }
+  .dora { padding: 2px 3px 3px; }
+  .dora .tile { --w: 13px; }
+  .stick { width: 34px; height: 4px; }
+  .stick.s0 { bottom: 22px; } .stick.s2 { top: 22px; } .stick.s1 { right: 22px; } .stick.s3 { left: 22px; }
+  .table.solo { --center: calc(var(--rw) * 8.2); }
+  .callout span { font-size: 2.2rem !important; padding: 4px 14px; }
+
+  /* 내 손패: 크게 키우고 두 줄로 나눠서 누르기 쉽게 */
+  .hand-row { gap: 6px; }
+  .hand { --tw: clamp(34px, 11.5vw, 46px); flex-wrap: wrap; justify-content: center; gap: 4px 2px; max-width: calc(var(--tw) * 7 + 14px + var(--tw) * 0.4); }
+  .hand .drawn { margin-left: calc(var(--tw) * 0.3); }
+  .melds { flex-wrap: wrap; justify-content: center; }
+  .meld { --tw: 26px; }
   button.tile:not(:disabled):hover { transform: translateY(-6px); }
+  .status { min-height: 64px; }
 }
