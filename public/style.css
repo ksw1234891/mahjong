@@ -34,7 +34,8 @@ body {
 .bar h1 { font-size: 1.15rem; margin: 0; letter-spacing: 0.02em; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .menu-btn { display: none; font-size: 1.3rem; padding: 4px 12px; line-height: 1; }
-#btnJudge[aria-pressed="true"], #btnAskCalls[aria-pressed="true"] {
+/* 아래 줄 토글 버튼은 켜지면 모두 노란 배경 (새 버튼도 자동 적용) */
+.actions button[aria-pressed="true"] {
   background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600;
 }
 #btnAskCalls[aria-pressed="false"] { opacity: 0.75; }
