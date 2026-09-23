@@ -1,0 +1,7 @@
+services:
+  mahjong:
+    build: .
+    image: solo-riichi-mahjong
+    ports:
+      - "8080:80"
+    restart: unless-stopped

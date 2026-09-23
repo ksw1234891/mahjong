@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>혼자 리치마작</title>
+  <meta name="description" content="상대는 버리기만 하는 1인용 리치마작 연습장">
+  <link rel="icon" href="tiles/Chun.svg">
+  <link rel="stylesheet" href="style.css?v=28">
+</head>
+<body>
+  <header class="bar">
+    <h1>혼자 리치마작</h1>
+    <div class="controls">
+      <select id="mode" aria-label="게임 방식">
+        <option value="4p">4인</option>
+        <option value="solo18">혼자 18순</option>
+        <option value="solo109">혼자 산 전부</option>
+      </select>
+      <select id="matchType" aria-label="대국 방식">
+        <option value="hanchan">반장전</option>
+        <option value="tonpuu">동풍전</option>
+        <option value="single">한 판씩 (점수 없음)</option>
+      </select>
+      <select id="oppLevel" aria-label="상대 강도">
+        <option value="off">상대: 버리기만</option>
+        <option value="easy">상대: 쉬움</option>
+        <option value="normal">상대: 보통</option>
+        <option value="hard">상대: 어려움</option>
+      </select>
+      <label class="toggle"><input type="checkbox" id="askCalls" checked> 퐁·치 묻기</label>
+      <button id="btnNew">새 게임</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="table" id="table">
+      <div class="seat seat-2"><div class="seat-label">대면 西</div><div class="river-box"><div class="river" id="river2"></div></div></div>
+      <div class="seat seat-3"><div class="seat-label">상가 北</div><div class="river-box"><div class="river" id="river3"></div></div></div>
+      <div class="center">
+        <div class="winds">
+          <span class="w w2" id="wind2"><b>西</b>대면</span>
+          <span class="w w3" id="wind3"><b>北</b>상가</span>
+          <span class="w w1" id="wind1"><b>南</b>하가</span>
+          <span class="w w0" id="wind0"><b>東</b>나</span>
+        </div>
+        <div class="center-info">
+          <div class="round-info" id="roundInfo" hidden></div>
+          <div class="lcd"><span class="lcd-label">남은 패</span><b id="left">0</b></div>
+          <div class="dora" id="dora"></div>
+        </div>
+        <div class="stick s0" id="stick0" hidden></div>
+        <div class="stick s1" id="stick1" hidden></div>
+        <div class="stick s2" id="stick2" hidden></div>
+        <div class="stick s3" id="stick3" hidden></div>
+      </div>
+      <div class="seat seat-1"><div class="seat-label">하가 南</div><div class="river-box"><div class="river" id="river1"></div></div></div>
+      <div class="seat seat-0"><div class="seat-label">나 東</div><div class="river-box"><div class="river" id="river0"></div></div></div>
+      <div class="callbar idle" id="callbar"></div>
+    </section>
+
+    <section class="status">
+      <div id="shantenText" class="shanten"></div>
+      <div id="waitText" class="wait"></div>
+    </section>
+
+    <section class="hand-wrap">
+      <div class="hand-row">
+        <div id="hand" class="hand"></div>
+        <div id="melds" class="melds"></div>
+      </div>
+      <div class="actions" id="actions">
+        <button id="btnTsumo" class="primary" disabled>쯔모</button>
+        <button id="btnRiichi" disabled>리치</button>
+        <span id="kanButtons"></span>
+        <button id="btnHint" aria-pressed="false">힌트</button>
+      </div>
+    </section>
+
+    <section class="panel hint" id="hintPanel" hidden>
+      <div class="analysis" id="analysis" hidden></div>
+      <div class="label">타패 후보 <span class="muted">(유효패 매수는 보이는 패를 뺀 수)</span></div>
+      <table id="hintTable"></table>
+    </section>
+
+    <section class="stats" id="stats"></section>
+  </main>
+
+  <dialog id="result">
+    <div class="result-body">
+      <h2 id="resultTitle"></h2>
+      <div id="resultHand" class="hand small"></div>
+      <div id="resultDetail"></div>
+      <div class="dialog-actions"><button id="btnNext" class="primary">다음 판</button></div>
+    </div>
+  </dialog>
+
+  <script src="mahjong.js?v=28"></script>
+  <script src="app.js?v=28"></script>
+</body>
+</html>
