@@ -11,22 +11,9 @@
   --rw: 28px;                        /* 버림패 폭 */
   font-family: system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --felt: #12382a;
-    --felt-dark: #0c271d;
-    --panel: rgba(0, 0, 0, 0.28);
-    --text: #e9e6dc;
-    --muted: #9fb3a8;
-  }
-}
-:root[data-theme="dark"] {
-  --felt: #12382a;
-  --felt-dark: #0c271d;
-  --panel: rgba(0, 0, 0, 0.28);
-  --text: #e9e6dc;
-  --muted: #9fb3a8;
-}
+/* 기기가 다크모드여도 똑같이 보이도록 한 가지 색만 쓰고,
+   브라우저의 자동 다크모드(색 뒤집기)도 끈다 */
+:root { color-scheme: only light; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
