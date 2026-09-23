@@ -6,7 +6,7 @@
   <title>리치마작</title>
   <meta name="description" content="컴퓨터 상대 3명과 두는 일본식 리치마작">
   <link rel="icon" href="tiles/Chun.svg">
-  <link rel="stylesheet" href="style.css?v=41">
+  <link rel="stylesheet" href="style.css?v=44">
 </head>
 <body>
   <header class="bar">
@@ -58,6 +58,12 @@
       <div class="seat seat-1"><div class="seat-label">하가 南</div><div class="river-box"><div class="river" id="river1"></div></div></div>
       <div class="seat seat-0"><div class="seat-label">나 東</div><div class="river-box"><div class="river" id="river0"></div></div></div>
       <div class="callbar idle" id="callbar"></div>
+      <!-- 내 차례에 할 수 있을 때만 뜨는 버튼 (쯔모 / 리치 / 깡) -->
+      <div class="callbar selfbar idle" id="selfbar">
+        <button id="btnTsumo" class="call-btn tsumo" disabled>쯔모</button>
+        <button id="btnRiichi" class="call-btn riichi" disabled>리치</button>
+        <span id="kanButtons"></span>
+      </div>
     </section>
 
     <section class="status">
@@ -71,9 +77,6 @@
         <div id="melds" class="melds"></div>
       </div>
       <div class="actions" id="actions">
-        <button id="btnTsumo" class="primary" disabled>쯔모</button>
-        <button id="btnRiichi" disabled>리치</button>
-        <span id="kanButtons"></span>
         <button id="btnHint" aria-pressed="false">힌트</button>
         <button id="btnJudge" aria-pressed="false" title="울기·리치를 할지 기대점수로 비교 (시뮬레이션이라 계산이 무거움)">기대값</button>
         <button id="btnAskCalls" aria-pressed="true" title="끄면 퐁·치·깡을 묻지 않고 넘김 (론은 항상 물어봄)">울기 ON</button>
@@ -101,7 +104,7 @@
     </div>
   </dialog>
 
-  <script src="mahjong.js?v=41"></script>
-  <script src="app.js?v=41"></script>
+  <script src="mahjong.js?v=44"></script>
+  <script src="app.js?v=44"></script>
 </body>
 </html>

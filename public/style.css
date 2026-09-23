@@ -221,10 +221,11 @@ button.ghost { background: transparent; }
   transform: translate(-50%, -50%);
   animation: callout-pop 1.3s ease-out forwards;
 }
-.callout.seat0 { left: 50%; top: 80%; }
-.callout.seat1 { left: 82%; top: 50%; }
-.callout.seat2 { left: 50%; top: 20%; }
-.callout.seat3 { left: 18%; top: 50%; }
+/* 자리 쪽으로 치우치되 테이블 안쪽에 두어 화면 밖으로 잘리지 않게 */
+.callout.seat0 { left: 50%; top: 72%; }
+.callout.seat1 { left: 70%; top: 50%; }
+.callout.seat2 { left: 50%; top: 28%; }
+.callout.seat3 { left: 30%; top: 50%; }
 .callout span {
   --c: #ffd257;
   display: block; padding: 6px 26px; border-radius: 16px;
@@ -275,6 +276,11 @@ button.ghost { background: transparent; }
 }
 
 /* ---------- 쯔모·리치 가능 상태: 버튼이 맥동하며 빛난다 ---------- */
+/* 쯔모·리치·깡 버튼은 할 수 없을 때 아예 숨긴다 */
+.selfbar button:disabled { display: none; }
+.selfbar #kanButtons { display: contents; }
+.selfbar #kanButtons .tile { --w: 20px; box-shadow: none; margin-left: 4px; }
+#btnRiichi.active { background: linear-gradient(#5a6b63, #37443e); color: #fff; }
 #btnTsumo:not(:disabled), #btnRiichi:not(:disabled):not(.active) {
   position: relative; overflow: hidden; font-weight: 800; border: 0;
   padding: 10px 26px; font-size: 1.1rem; letter-spacing: 0.06em;
@@ -404,8 +410,7 @@ button.tile.glow { box-shadow: 0 0 0 3px var(--accent), 0 calc(var(--w) * 0.07) 
 .hand.selecting button.tile:disabled, button.tile.banned { filter: brightness(0.6); }
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-#kanButtons { display: contents; }
-#kanButtons .tile { --w: 18px; box-shadow: none; }
+
 
 /* ---------- 힌트 ---------- */
 .hint table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -460,6 +465,8 @@ button.tile.glow { box-shadow: 0 0 0 3px var(--accent), 0 calc(var(--w) * 0.07) 
 }
 button.tile:hover .tile-info, button.tile:focus-visible .tile-info, button.tile.selected .tile-info { opacity: 1; }
 /* 터치: 선택한 패는 올라오고 테두리 표시, 한 번 더 누르면 버린다 */
+/* 선택·마우스를 올린 패는 맨 위 층으로 (두 줄일 때 아랫줄 패에 정보가 가려지지 않게) */
+.hand button.tile:hover, .hand button.tile.selected { z-index: 40; }
 button.tile.selected { transform: translateY(-12px); box-shadow: 0 0 0 3px #fff, 0 calc(var(--w) * 0.07) 0 #c9a45c; }
 /* 길게 눌러도 브라우저 메뉴·글자 선택이 뜨지 않게 */
 .tile, .hand { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -567,7 +574,8 @@ table.settle.final td { font-size: 1.05rem; }
   .stick { width: 34px; height: 4px; }
   .stick.s0 { bottom: 22px; } .stick.s2 { top: 22px; } .stick.s1 { right: 22px; } .stick.s3 { left: 22px; }
   .table.solo { --center: calc(var(--rw) * 8.2); }
-  .callout span { font-size: 2.2rem !important; padding: 4px 14px; }
+  .callout span { font-size: 1.9rem !important; padding: 4px 14px; }
+  .callout.seat1 { left: 64%; } .callout.seat3 { left: 36%; }
 
   /* 내 손패: 크게 키우고 두 줄로 나눠서 누르기 쉽게 */
   .hand-row { gap: 6px; }

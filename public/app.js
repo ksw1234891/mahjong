@@ -27,6 +27,7 @@
   // ---------- 선언 애니메이션 (리치 / 퐁 / 치 / 깡 / 론 / 쯔모) ----------
   const FAST = /[?&]fast\b/.test(location.search);
   const CALLOUT_MS = FAST ? 0 : 900;    // 애니메이션을 보여 주는 동안 진행을 멈추는 시간
+  const RESULT_DELAY_MS = FAST ? 0 : 1250; // 화료 선언이 거의 끝난 뒤 결과 창을 띄운다
   const CALLOUT_CLASS = { '리치': 'riichi', '퐁': 'pon', '치': 'chi', '깡': 'kan', '론': 'ron', '쯔모': 'tsumo' };
   function callout(seat, text) {
     if (FAST) return;
@@ -1120,7 +1121,10 @@
     if (outcome.type === 'draw') return showResult(outcome, title);
     const winner = outcome.type === 'win' ? 0 : outcome.seat;
     callout(winner, outcome.result.tsumo ? '쯔모' : '론');
-    setTimeout(() => { if (S.phase === 'over' && !S.finalShown) showResult(outcome, title); }, CALLOUT_MS);
+    setTimeout(() => {
+      document.querySelectorAll('.callout').forEach((el) => el.remove());
+      if (S.phase === 'over' && !S.finalShown) showResult(outcome, title);
+    }, RESULT_DELAY_MS);
   }
 
   function showResult(outcome, title) {
@@ -1470,10 +1474,14 @@
     kb.innerHTML = '';
     for (const opt of kanOptions()) {
       const b = document.createElement('button');
+      b.className = 'call-btn kan';
       b.append(opt.kind === 'ankan' ? '안깡 ' : '가깡 ', tileEl(opt.tile));
       b.addEventListener('click', () => doKan(opt));
       kb.append(b);
     }
+    // 할 수 있는 게 있을 때만 테이블 위에 띄운다
+    const any = !$('btnTsumo').disabled || !$('btnRiichi').disabled || kb.children.length > 0;
+    $('selfbar').classList.toggle('idle', !any || S.phase !== 'self');
   }
 
   function renderHint() {
@@ -1488,7 +1496,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=41');
+    worker = new Worker('sim.js?v=44');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
