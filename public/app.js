@@ -99,7 +99,7 @@
     if (el.selectedIndex < 0) el.value = fallback;
   }
   setSelect('mode', load('mj-mode', '4p'), '4p');
-  setSelect('oppLevel', load('mj-opp-level', 'off'), 'off');
+  setSelect('oppLevel', load('mj-opp-level', 'expert'), 'expert');   // 기본: 상대 매우 어려움
   setSelect('matchType', load('mj-match-type', 'hanchan'), 'hanchan');
   const pressed = (id) => $(id).getAttribute('aria-pressed') === 'true';
   const setPressed = (id, on) => $(id).setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -1290,7 +1290,7 @@
     if (!g || g.v !== SAVE_VERSION || !g.hand) return false;
     S = { ...g, timer: null, banned: g.banned ? new Set(g.banned) : null, hintMinH: 0, mainMinH: 0 };
     setSelect('mode', S.mode, '4p');
-    setSelect('oppLevel', S.level, 'off');
+    setSelect('oppLevel', S.level, 'expert');
     S.level = $('oppLevel').value;
     if (M) $('matchType').value = M.type;
     render();
@@ -1596,7 +1596,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=68');
+    worker = new Worker('sim.js?v=69');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
