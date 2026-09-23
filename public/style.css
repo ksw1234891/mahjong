@@ -371,6 +371,20 @@ button.ghost { background: transparent; }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); filter: blur(5px); }
 }
 
+/* ---------- 화료 때 자리 강조 ---------- */
+/* 자리 강조 */
+.seat.hl-win::after, .seat.hl-lose::after {
+  content: ""; position: absolute; inset: -4px; border-radius: 12px; pointer-events: none; z-index: 4;
+  animation: seat-pulse 0.45s ease-in-out 4 alternate;
+}
+.seat.hl-win::after { box-shadow: 0 0 0 3px #ffd84a, 0 0 30px 6px rgba(255, 210, 60, .85), inset 0 0 30px rgba(255, 210, 60, .35); }
+.seat.hl-lose::after { box-shadow: 0 0 0 3px #ff3b4a, 0 0 30px 6px rgba(255, 40, 60, .85), inset 0 0 30px rgba(255, 40, 60, .35); }
+@keyframes seat-pulse { from { opacity: .45; } to { opacity: 1; } }
+.winds .w.hl-win { background: #f5b400; color: #3a2500; box-shadow: 0 0 16px rgba(255, 210, 60, .9); }
+.winds .w.hl-win b { color: #3a2500; }
+.winds .w.hl-lose { background: #d6001c; color: #fff; box-shadow: 0 0 16px rgba(255, 40, 60, .9); }
+.winds .w.hl-lose b { color: #fff; }
+
 /* 퐁·치·깡은 작게 (큰 연출과 차이가 나게) */
 .callout:not(.big) span { font-size: clamp(2rem, 7vw, 3.2rem); }
 

@@ -29,7 +29,8 @@
   const CALLOUT_MS = FAST ? 0 : 900;    // 애니메이션을 보여 주는 동안 진행을 멈추는 시간
   const RESULT_DELAY_MS = FAST ? 0 : 1550; // 화료 선언이 거의 끝난 뒤 결과 창을 띄운다
   const CALLOUT_CLASS = { '리치': 'riichi', '퐁': 'pon', '치': 'chi', '깡': 'kan', '론': 'ron', '쯔모': 'tsumo' };
-  function callout(seat, text) {
+  // from: 론일 때 방총한 자리 (누가 누구에게서 화료했는지 표시)
+  function callout(seat, text, from = null) {
     if (FAST) return;
     // 3단계: 퐁·치·깡(작게) < 리치(크게) < 쯔모·론(최대)
     const big = ['리치', '쯔모', '론'].includes(text);
@@ -41,6 +42,8 @@
       el.innerHTML = (win ? '<div class="rays"></div>' : '') +
         '<div class="slash"></div><div class="ring r1"></div>' + (win ? '<div class="ring r2"></div>' : '') +
         `<small>${SEAT_NAMES[seat]}</small><span class="t">${text}</span>`;
+      // 화료한 자리(금색)와 방총한 자리(빨강)를 판 위에서 빛나게
+      if (win) highlightSeats(seat, text === '론' ? from : null);
     } else {
       el.innerHTML = `<span>${text}!</span>`;
     }
@@ -61,6 +64,17 @@
     // 빛 고리(::before)가 먼저 끝나도 글자는 남겨 두고, 애니메이션이 멈춘 환경에서도 결국 지운다
     el.addEventListener('animationend', (e) => { if (!e.pseudoElement) el.remove(); });
     setTimeout(() => el.remove(), win ? 1900 : 1600);
+  }
+
+  // 연출 동안 화료한 자리(금색)와 방총한 자리(빨강)를 판 위에서 빛나게
+  function highlightSeats(winner, loser) {
+    const mark = (q, cls) => {
+      const els = [document.querySelector('.seat-' + q), $('wind' + q)].filter(Boolean);
+      els.forEach((e) => e.classList.add(cls));
+      setTimeout(() => els.forEach((e) => e.classList.remove(cls)), 1800);
+    };
+    mark(winner, 'hl-win');
+    if (loser != null) mark(loser, 'hl-lose');
   }
 
   // ---------- 저장 (브라우저별) ----------
@@ -1131,7 +1145,7 @@
     render();
     if (outcome.type === 'draw') return showResult(outcome, title);
     const winner = outcome.type === 'win' ? 0 : outcome.seat;
-    callout(winner, outcome.result.tsumo ? '쯔모' : '론');
+    callout(winner, outcome.result.tsumo ? '쯔모' : '론', outcome.result.tsumo ? null : outcome.from);
     setTimeout(() => {
       document.querySelectorAll('.callout').forEach((el) => el.remove());
       if (S.phase === 'over' && !S.finalShown) showResult(outcome, title);
@@ -1551,7 +1565,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=56');
+    worker = new Worker('sim.js?v=60');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1883,7 +1897,7 @@
   });
 
   // 주소에 ?debug 를 붙이면 콘솔에서 내부 상태를 볼 수 있다 (테스트용)
-  if (/[?&]debug\b/.test(location.search)) window.__mj = { get S() { return S; }, oppCallChoice, decideOppCall, hasYakuPath, render };
+  if (/[?&]debug\b/.test(location.search)) window.__mj = { get S() { return S; }, oppCallChoice, decideOppCall, hasYakuPath, render, callout };
   $('btnHint').setAttribute('aria-pressed', load('mj-hint', false) ? 'true' : 'false');
   // 진행 중이던 게임이 있으면 이어서, 없으면 새 게임
   if (!restoreGame()) newMatch();
