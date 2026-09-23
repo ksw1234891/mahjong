@@ -8,7 +8,7 @@
   <title>리치마작</title>
   <meta name="description" content="컴퓨터 상대 3명과 두는 일본식 리치마작">
   <link rel="icon" href="tiles/Chun.svg">
-  <link rel="stylesheet" href="style.css?v=47">
+  <link rel="stylesheet" href="style.css?v=49">
 </head>
 <body>
   <header class="bar">
@@ -59,6 +59,10 @@
       </div>
       <div class="seat seat-1"><div class="seat-label">하가 南</div><div class="river-box"><div class="river" id="river1"></div></div></div>
       <div class="seat seat-0"><div class="seat-label">나 東</div><div class="river-box"><div class="river" id="river0"></div></div></div>
+      <!-- 상대 부로: 각자 기준 오른쪽 모서리 (대면=왼쪽 위, 하가=오른쪽 위, 상가=왼쪽 아래) -->
+      <div class="opp-melds om1" id="oppMelds1"></div>
+      <div class="opp-melds om2" id="oppMelds2"></div>
+      <div class="opp-melds om3" id="oppMelds3"></div>
       <div class="callbar idle" id="callbar"></div>
       <!-- 내 차례에 할 수 있을 때만 뜨는 버튼 (쯔모 / 리치 / 깡) -->
       <div class="callbar selfbar idle" id="selfbar">
@@ -106,7 +110,7 @@
     </div>
   </dialog>
 
-  <script src="mahjong.js?v=47"></script>
-  <script src="app.js?v=47"></script>
+  <script src="mahjong.js?v=49"></script>
+  <script src="app.js?v=49"></script>
 </body>
 </html>

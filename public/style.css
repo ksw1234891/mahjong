@@ -133,8 +133,19 @@ button.ghost { background: transparent; }
   display: flex; flex-wrap: wrap; align-content: flex-start; gap: 2px;
   padding: 2px;
 }
-.river-melds { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; margin-top: 6px; }
-.river-melds .meld { --tw: var(--rw); gap: 1px; }
+/* 상대 부로: 판 모서리에서 그 사람 방향으로 회전해서 놓는다 */
+.opp-melds {
+  position: absolute; z-index: 3; display: flex; gap: 5px; align-items: flex-end;
+  --tw: calc(var(--rw) * 0.92);
+}
+.opp-melds .meld { --tw: calc(var(--rw) * 0.92); gap: 1px; }
+.opp-melds:empty { display: none; }
+/* 대면: 왼쪽 위 (180도) */
+.om2 { top: 6px; left: 6px; transform: rotate(180deg); }
+/* 하가: 오른쪽 위, 판 가장자리를 따라 아래로 (-90도) */
+.om1 { top: 6px; right: 6px; transform-origin: 100% 0; transform: rotate(-90deg) translateY(-100%); }
+/* 상가: 왼쪽 아래, 판 가장자리를 따라 위로 (90도) */
+.om3 { bottom: 6px; left: 6px; transform-origin: 0 100%; transform: rotate(90deg) translateX(-100%); }
 .river .tile { box-shadow: 0 calc(var(--w) * 0.07) 0 #c9a45c, 0 3px 5px rgba(0,0,0,.4); }
 .seat-0 .river { transform: translate(-50%, -50%); }
 .seat-1 .river { transform: translate(-50%, -50%) rotate(-90deg); }
@@ -545,7 +556,9 @@ table.settle.final td { font-size: 1.05rem; }
   }
   .river { gap: 1px; padding: 1px; }
   .river .tile { box-shadow: 0 1px 0 #c9a45c; }
-  .river-melds .meld { --tw: var(--rw); }
+  .opp-melds, .opp-melds .meld { --tw: calc(var(--rw) * 0.92); }
+  .opp-melds { gap: 3px; }
+  .om2 { top: 3px; left: 3px; } .om1 { top: 3px; right: 3px; } .om3 { bottom: 3px; left: 3px; }
   .center { border-radius: 10px; }
   .winds .w { font-size: 0.55rem; padding: 1px 5px; gap: 2px; }
   .winds .w b { font-size: 0.8rem; }

@@ -1308,11 +1308,10 @@
         if (S.phase === 'call' && S.pending && p === S.pending.from && i === S.rivers[p].length - 1) el.classList.add('last');
         river.append(el);
       });
-      if (p > 0 && S.oppMelds[p].length) {
-        const row = document.createElement('div');
-        row.className = 'river-melds';
-        for (const m of S.oppMelds[p]) row.append(meldEl(m, p));
-        river.append(row);
+      if (p > 0) {
+        const box = $('oppMelds' + p);
+        box.innerHTML = '';
+        for (const m of S.oppMelds[p]) box.append(meldEl(m, p));
       }
     }
 
@@ -1539,7 +1538,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=47');
+    worker = new Worker('sim.js?v=49');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1864,7 +1863,7 @@
   });
 
   // 주소에 ?debug 를 붙이면 콘솔에서 내부 상태를 볼 수 있다 (테스트용)
-  if (/[?&]debug\b/.test(location.search)) window.__mj = { get S() { return S; }, oppCallChoice, decideOppCall, hasYakuPath };
+  if (/[?&]debug\b/.test(location.search)) window.__mj = { get S() { return S; }, oppCallChoice, decideOppCall, hasYakuPath, render };
   $('btnHint').setAttribute('aria-pressed', load('mj-hint', false) ? 'true' : 'false');
   // 진행 중이던 게임이 있으면 이어서, 없으면 새 게임
   if (!restoreGame()) newMatch();
