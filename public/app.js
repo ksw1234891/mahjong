@@ -32,24 +32,29 @@
   // from: 론일 때 방총한 자리 (누가 누구에게서 화료했는지 표시)
   function callout(seat, text, from = null) {
     if (FAST) return;
-    // 3단계: 퐁·치·깡(작게) < 리치(크게) < 쯔모·론(최대)
-    const big = ['리치', '쯔모', '론'].includes(text);
+    // 퐁·치·깡: 자리 쪽 작은 글자 / 리치: 그 자리에서 리치봉이 꽂히는 연출 / 쯔모·론: 판 가운데 최대 연출
     const win = text === '쯔모' || text === '론';
+    const big = win;
+    const riichi = text === '리치';
     const el = document.createElement('div');
-    el.className = `callout seat${seat} ${CALLOUT_CLASS[text] || ''}${big ? ' big' : ''}${win ? ' win' : ''}`;
+    el.className = `callout seat${seat} ${CALLOUT_CLASS[text] || ''}${big ? ' big win' : ''}${riichi ? ' rc' : ''}`;
     if (big) {
-      // 판 한가운데에 내려꽂힘 (대각선 베기 + 충격파 + 누가 했는지). 화료는 빛살 폭발까지
-      el.innerHTML = (win ? '<div class="rays"></div>' : '') +
-        '<div class="slash"></div><div class="ring r1"></div>' + (win ? '<div class="ring r2"></div>' : '') +
+      // 판 한가운데에 내려꽂힘 (대각선 베기 + 빛살 폭발 + 충격파)
+      el.innerHTML = '<div class="rays"></div><div class="slash"></div><div class="ring r1"></div><div class="ring r2"></div>' +
         `<small>${SEAT_NAMES[seat]}</small><span class="t">${text}</span>`;
       // 화료한 자리(금색)와 방총한 자리(빨강)를 판 위에서 빛나게
-      if (win) highlightSeats(seat, text === '론' ? from : null);
+      highlightSeats(seat, text === '론' ? from : null);
+    } else if (riichi) {
+      // 그 자리 앞으로 리치봉이 떨어져 꽂히고 주황 충격파 + "리치" 배지. 버림패 영역도 주황으로 깜빡
+      el.innerHTML = '<div class="rc-ring"></div><div class="rc-ring r2"></div><div class="rc-stick"></div>' +
+        `<span class="rc-text"><small>${SEAT_NAMES[seat]}</small>리치</span>`;
+      markSeat(seat, 'hl-riichi');
     } else {
       el.innerHTML = `<span>${text}!</span>`;
     }
     $('table').append(el);
     if (big) {
-      // 화면 번쩍(흰색 → 그 색) + 테이블 강하게 흔들림 + 순간 경직
+      // 화면 번쩍(흰색 → 그 색) + 테이블 강하게 흔들림 + 순간 경직 (쯔모·론만)
       const flash = document.createElement('div');
       flash.className = `screen-flash ${CALLOUT_CLASS[text]}${win ? ' win' : ''}`;
       document.body.append(flash);
@@ -66,15 +71,16 @@
     setTimeout(() => el.remove(), win ? 1900 : 1600);
   }
 
-  // 연출 동안 화료한 자리(금색)와 방총한 자리(빨강)를 판 위에서 빛나게
+  // 연출 동안 자리(버림패 영역 + 콘솔 바람 표시)를 빛나게
+  function markSeat(q, cls) {
+    const els = [document.querySelector('.seat-' + q), $('wind' + q)].filter(Boolean);
+    els.forEach((e) => e.classList.add(cls));
+    setTimeout(() => els.forEach((e) => e.classList.remove(cls)), 1800);
+  }
+  // 화료한 자리(금색)와 방총한 자리(빨강)
   function highlightSeats(winner, loser) {
-    const mark = (q, cls) => {
-      const els = [document.querySelector('.seat-' + q), $('wind' + q)].filter(Boolean);
-      els.forEach((e) => e.classList.add(cls));
-      setTimeout(() => els.forEach((e) => e.classList.remove(cls)), 1800);
-    };
-    mark(winner, 'hl-win');
-    if (loser != null) mark(loser, 'hl-lose');
+    markSeat(winner, 'hl-win');
+    if (loser != null) markSeat(loser, 'hl-lose');
   }
 
   // ---------- 저장 (브라우저별) ----------
@@ -106,6 +112,7 @@
   function tileEl(type, opts = {}) {
     const el = document.createElement(opts.button ? 'button' : 'span');
     el.className = 'tile';
+    el.dataset.t = type;
     if (opts.back) {
       el.classList.add('back');
     } else {
@@ -1330,6 +1337,7 @@
       S.rivers[p].forEach((d, i) => {
         const el = idEl(d.id, { side: d.riichi });
         if (d.called) el.classList.add('called');
+        if (d.riichi && S.seq - d.seq <= 1) el.classList.add('riichi-flash');
         if (S.phase === 'call' && S.pending && p === S.pending.from && i === S.rivers[p].length - 1) el.classList.add('last');
         river.append(el);
       });
@@ -1357,10 +1365,13 @@
   }
 
   // 터치 기기 + 힌트를 켰을 때: 한 번 누르면 선택(확률 표시), 같은 패를 한 번 더 누르면 버리기
-  const TOUCH = window.matchMedia('(hover: none)').matches;
+  // 기기 종류(hover 지원 여부)는 폰마다 다르게 알려 주므로, 실제로 손가락·펜으로 눌렀는지로 판단한다
+  let lastPointer = 'mouse';
+  addEventListener('pointerdown', (e) => { lastPointer = e.pointerType || 'mouse'; }, { capture: true, passive: true });
   let selectedId = null;
   function tapTile(id) {
-    if (!(TOUCH && pressed('btnDanger')) || selectedId === id) {
+    const touch = lastPointer === 'touch' || lastPointer === 'pen';
+    if (!(touch && pressed('btnDanger')) || selectedId === id) {
       selectedId = null;
       return discard(id);
     }
@@ -1469,6 +1480,14 @@
     const melds = $('melds');
     melds.innerHTML = '';
     for (let i = S.melds.length - 1; i >= 0; i--) melds.append(meldEl(S.melds[i]));
+
+    // 도라 표시패 기준으로 도라인 내 패(손패·부로)는 금빛 광택
+    const doras = new Set(doraIndicators().map(MJ.doraFromIndicator));
+    for (const t of document.querySelectorAll('#hand .tile:not(.placeholder), #melds .tile:not(.back)')) {
+      if (!doras.has(Number(t.dataset.t))) continue;
+      t.classList.add('is-dora');
+      t.append(Object.assign(document.createElement('span'), { className: 'sheen' }));
+    }
   }
 
   function renderStatus() {
@@ -1565,7 +1584,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=62');
+    worker = new Worker('sim.js?v=64');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });

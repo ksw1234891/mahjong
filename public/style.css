@@ -371,6 +371,83 @@ button.ghost { background: transparent; }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); filter: blur(5px); }
 }
 
+/* ---------- 리치: 그 자리에서 리치봉이 꽂히는 연출 ---------- */
+.callout.rc { z-index: 110; animation: rc-life 1.5s ease-out forwards; }
+.callout.rc::before { display: none; }
+.callout.rc.seat0 { left: 50%; top: 76%; }
+.callout.rc.seat1 { left: 76%; top: 50%; }
+.callout.rc.seat2 { left: 50%; top: 24%; }
+.callout.rc.seat3 { left: 24%; top: 50%; }
+.rc-text {
+  position: relative; z-index: 3; display: grid; justify-items: center; gap: 2px;
+  padding: 6px 22px 8px; border-radius: 14px; white-space: nowrap;
+  font: 900 clamp(1.8rem, 6vw, 2.8rem)/1 system-ui, sans-serif; letter-spacing: 0.12em; color: #fff;
+  background: linear-gradient(#ff8a3d, #d9480f); border: 3px solid #ffe2c4;
+  box-shadow: 0 0 0 3px #d9480f, 0 0 26px rgba(255, 120, 40, .9), 0 8px 20px rgba(0,0,0,.5);
+  text-shadow: 0 2px 0 rgba(0,0,0,.35);
+  animation: rc-badge 1.5s cubic-bezier(.2,1.5,.4,1) forwards;
+}
+.rc-text small { font-size: 0.4em; letter-spacing: 0.25em; opacity: .95; }
+/* 리치봉이 위에서 떨어져 꽂힌다 */
+.rc-stick {
+  position: absolute; z-index: 2; left: 50%; top: 100%; width: 120px; height: 12px; margin: 10px 0 0 -60px;
+  border-radius: 6px; background: linear-gradient(#ffffff, #d9d9d9); box-shadow: 0 3px 8px rgba(0,0,0,.6);
+  animation: rc-drop 1.5s cubic-bezier(.3,1.6,.5,1) forwards;
+}
+.rc-stick::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: #d6001c; }
+.rc-ring {
+  position: absolute; z-index: 1; left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px;
+  border-radius: 50%; border: 6px solid rgba(255, 150, 70, .95); box-shadow: 0 0 20px rgba(255, 120, 40, .9);
+  opacity: 0; animation: shock 0.8s ease-out 0.18s forwards;
+}
+.rc-ring.r2 { animation-delay: 0.36s; border-width: 3px; }
+@keyframes rc-life { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes rc-badge {
+  0%   { transform: translateY(-30px) scale(0.3); opacity: 0; }
+  14%  { transform: translateY(0) scale(1.15); opacity: 1; }
+  22%  { transform: scale(0.95); }
+  30%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+@keyframes rc-drop {
+  0%, 10% { transform: translateY(-120px) rotate(-25deg); opacity: 0; }
+  24%     { transform: translateY(0) rotate(0); opacity: 1; }
+  30%     { transform: translateY(-6px); }
+  36%     { transform: translateY(0); }
+  100%    { transform: translateY(0); opacity: 1; }
+}
+/* 리치한 자리: 버림패 영역이 주황으로 깜빡 */
+.seat.hl-riichi::after {
+  content: ""; position: absolute; inset: -4px; border-radius: 12px; pointer-events: none; z-index: 4;
+  box-shadow: 0 0 0 3px #ff8a3d, 0 0 30px 6px rgba(255, 120, 40, .8), inset 0 0 30px rgba(255, 120, 40, .3);
+  animation: seat-pulse 0.4s ease-in-out 4 alternate;
+}
+.winds .w.hl-riichi { background: #e8590c; color: #fff; box-shadow: 0 0 16px rgba(255, 120, 40, .9); }
+.winds .w.hl-riichi b { color: #fff; }
+/* 방금 리치 선언한 패 (옆으로 눕힌 패) */
+.river .tile.riichi-flash { animation: rflash 0.35s ease-in-out 6 alternate; }
+@keyframes rflash {
+  from { box-shadow: 0 0 0 2px #ff8a3d, 0 0 8px rgba(255, 120, 40, .6); }
+  to   { box-shadow: 0 0 0 3px #ffe2c4, 0 0 20px 4px rgba(255, 120, 40, 1); }
+}
+
+/* ---------- 도라: 도라 표시패 기준 도라인 내 패에 금빛 광택 ---------- */
+.tile.is-dora { box-shadow: 0 0 0 2px #ffd84a, 0 0 12px rgba(255, 210, 60, .7), 0 calc(var(--w) * 0.07) 0 #c9a45c; animation: dora-glow 1.6s ease-in-out infinite; }
+.tile.is-dora .sheen {
+  position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none; overflow: hidden;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 245, 190, .85) 50%, transparent 65%) no-repeat;
+  background-size: 250% 100%; background-position: 150% 0;
+  mix-blend-mode: screen; animation: sheen 2.4s ease-in-out infinite;
+}
+@keyframes sheen { 0% { background-position: 150% 0; } 45%, 100% { background-position: -60% 0; } }
+@keyframes dora-glow {
+  0%, 100% { box-shadow: 0 0 0 2px #ffd84a, 0 0 8px rgba(255, 210, 60, .5), 0 calc(var(--w) * 0.07) 0 #c9a45c; }
+  50%      { box-shadow: 0 0 0 2px #fff3b0, 0 0 18px 3px rgba(255, 210, 60, .95), 0 calc(var(--w) * 0.07) 0 #c9a45c; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile.is-dora, .tile.is-dora .sheen, .river .tile.riichi-flash { animation: none; }
+}
+
 /* ---------- 화료 때 자리 강조 ---------- */
 /* 자리 강조 */
 .seat.hl-win::after, .seat.hl-lose::after {
