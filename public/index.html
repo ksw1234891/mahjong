@@ -8,11 +8,14 @@
   <title>리치마작</title>
   <meta name="description" content="컴퓨터 상대 3명과 두는 일본식 리치마작">
   <link rel="icon" href="tiles/Chun.svg">
-  <link rel="stylesheet" href="style.css?v=64">
+  <link rel="stylesheet" href="style.css?v=68">
 </head>
 <body>
   <header class="bar">
-    <h1>리치마작</h1>
+    <div class="title-wrap">
+      <h1>리치마작</h1>
+      <span id="setupInfo" class="setup-info" title="현재 게임 설정"></span>
+    </div>
     <button id="btnMenu" class="menu-btn" aria-label="설정 메뉴" aria-expanded="false" aria-controls="controls">☰</button>
     <div class="controls" id="controls">
       <select id="mode" aria-label="게임 방식">
@@ -121,7 +124,7 @@
     </div>
   </dialog>
 
-  <script src="mahjong.js?v=64"></script>
-  <script src="app.js?v=64"></script>
+  <script src="mahjong.js?v=68"></script>
+  <script src="app.js?v=68"></script>
 </body>
 </html>

@@ -1301,8 +1301,20 @@
     return true;
   }
 
+  // 제목 옆 현재 설정 요약 (메뉴를 닫아도 보이게)
+  function renderSetupInfo() {
+    const label = (id) => $(id).selectedOptions[0]?.textContent || '';
+    const parts = [label('mode')];
+    if (S.mode === '4p') {
+      parts.push(M ? (M.type === 'tonpuu' ? '동풍전' : '반장전') : '한 판씩');
+      parts.push(label('oppLevel').replace('상대: ', '상대 '));
+    }
+    $('setupInfo').textContent = parts.join(' · ');
+  }
+
   // ---------- 화면 갱신 ----------
   function render() {
+    renderSetupInfo();
     $('table').classList.toggle('solo', solo());
     for (let p = 0; p < 4; p++) {
       const turn = S.turn === p && S.phase !== 'over';
@@ -1584,7 +1596,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=64');
+    worker = new Worker('sim.js?v=68');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });

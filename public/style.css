@@ -7,7 +7,7 @@
   --accent: #f2c14e;
   --accent-text: #2b2100;
   --warn: #ff9b8a;
-  --tw: clamp(22px, 6.2vw, 50px);   /* 손패 폭 */
+  --tw: min(clamp(22px, 6.2vw, 50px), calc(100vh / 15));   /* 손패 폭 (낮은 화면에서는 높이에 맞춰 줄임) */
   --rw: 28px;                        /* 버림패 폭 */
   font-family: system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
@@ -32,6 +32,12 @@ body {
   max-width: 1000px; margin: 0 auto;
 }
 .bar h1 { font-size: 1.15rem; margin: 0; letter-spacing: 0.02em; }
+.title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; margin-right: auto; }
+.setup-info {
+  padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+  color: var(--accent); background: rgba(0,0,0,.25); border: 1px solid rgba(242, 193, 78, .45);
+  overflow: hidden; text-overflow: ellipsis;
+}
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .menu-btn { display: none; font-size: 1.3rem; padding: 4px 12px; line-height: 1; }
 /* 아래 줄 토글 버튼은 켜지면 모두 노란 배경 (새 버튼도 자동 적용) */
@@ -89,7 +95,8 @@ button.ghost { background: transparent; }
 
 /* ---------- 테이블 ---------- */
 .table {
-  --rw: 24px;
+  /* 버림패 크기를 화면 높이에 맞춘다 (PC 100%에서도 손패 아래 버튼까지 한 화면에 들어오게) */
+  --rw: clamp(12px, calc((100vh - 370px) / 26), 24px);
   --rh: calc(var(--rw) * 4 / 3);
   --river-w: calc(var(--rw) * 6 + var(--rh) - var(--rw) + 12px);
   --river-h: calc(var(--rh) * 4 + 12px);
@@ -98,7 +105,7 @@ button.ghost { background: transparent; }
   --felt-c: #123f2e;
   display: grid;
   /* 가운데 콘솔은 점수까지 들어가도록 버림패 폭보다 넉넉하게 */
-  --center: max(var(--river-w), 290px);
+  --center: max(var(--river-w), calc(var(--rw) * 11.5));
   grid-template-columns: var(--river-h) var(--center) var(--river-h);
   grid-template-rows: var(--river-h) var(--center) var(--river-h);
   grid-template-areas: ". top ." "left center right" ". bottom .";
@@ -581,7 +588,7 @@ button.tile.winning {
 
 /* ---------- 상태 / 울기 / 손패 ---------- */
 /* 대기패 줄이 떴다 사라져도 손패 위치가 바뀌지 않게 높이를 미리 확보한다 */
-.status { display: grid; gap: 6px; min-height: 84px; align-content: start; justify-items: center; text-align: center; }
+.status { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px; min-height: 60px; text-align: center; }
 .shanten { font-size: 1.05rem; font-weight: 600; }
 .shanten[data-level="good"] { color: var(--accent); }
 .wait { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; font-size: 0.9rem; }
@@ -766,8 +773,8 @@ button.tile.furiten { box-shadow: 0 0 0 2px #ff6b5e, 0 calc(var(--w) * 0.07) 0 #
   font-size: 0.75rem; font-weight: 700; color: #fff; background: #d8352a;
 }
 button.tile.peek { transform: translateY(-10px); box-shadow: 0 0 0 3px #fff, 0 calc(var(--w) * 0.07) 0 #c9a45c; }
-.wait-tile { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
-.wait-tile .tile { --w: 24px; }
+.wait-tile { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
+.wait-tile .tile { --w: 22px; }
 .wait-tile.dead { opacity: 0.4; }
 .wait-tile small { font-size: 0.75rem; }
 
@@ -810,6 +817,7 @@ table.settle.final td { font-size: 1.05rem; }
 @media (max-width: 640px) {
   /* 설정은 햄버거 메뉴 안에 */
   .bar { padding: 8px 16px; }
+  .setup-info { font-size: 0.7rem; padding: 2px 8px; }
   .menu-btn { display: inline-flex; }
   .controls { display: none; width: 100%; }
   .bar.open .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
