@@ -1616,7 +1616,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=74');
+    worker = new Worker('sim.js?v=78');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
