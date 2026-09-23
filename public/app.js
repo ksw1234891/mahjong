@@ -27,29 +27,40 @@
   // ---------- 선언 애니메이션 (리치 / 퐁 / 치 / 깡 / 론 / 쯔모) ----------
   const FAST = /[?&]fast\b/.test(location.search);
   const CALLOUT_MS = FAST ? 0 : 900;    // 애니메이션을 보여 주는 동안 진행을 멈추는 시간
-  const RESULT_DELAY_MS = FAST ? 0 : 1250; // 화료 선언이 거의 끝난 뒤 결과 창을 띄운다
+  const RESULT_DELAY_MS = FAST ? 0 : 1550; // 화료 선언이 거의 끝난 뒤 결과 창을 띄운다
   const CALLOUT_CLASS = { '리치': 'riichi', '퐁': 'pon', '치': 'chi', '깡': 'kan', '론': 'ron', '쯔모': 'tsumo' };
   function callout(seat, text) {
     if (FAST) return;
+    // 3단계: 퐁·치·깡(작게) < 리치(크게) < 쯔모·론(최대)
+    const big = ['리치', '쯔모', '론'].includes(text);
+    const win = text === '쯔모' || text === '론';
     const el = document.createElement('div');
-    el.className = `callout seat${seat} ${CALLOUT_CLASS[text] || ''}`;
-    el.innerHTML = `<span>${text}!</span>`;
+    el.className = `callout seat${seat} ${CALLOUT_CLASS[text] || ''}${big ? ' big' : ''}${win ? ' win' : ''}`;
+    if (big) {
+      // 판 한가운데에 내려꽂힘 (대각선 베기 + 충격파 + 누가 했는지). 화료는 빛살 폭발까지
+      el.innerHTML = (win ? '<div class="rays"></div>' : '') +
+        '<div class="slash"></div><div class="ring r1"></div>' + (win ? '<div class="ring r2"></div>' : '') +
+        `<small>${SEAT_NAMES[seat]}</small><span class="t">${text}</span>`;
+    } else {
+      el.innerHTML = `<span>${text}!</span>`;
+    }
     $('table').append(el);
-    // 리치·쯔모·론은 화면 번쩍 + 테이블 흔들림
-    if (['리치', '쯔모', '론'].includes(text)) {
+    if (big) {
+      // 화면 번쩍(흰색 → 그 색) + 테이블 강하게 흔들림 + 순간 경직
       const flash = document.createElement('div');
-      flash.className = `screen-flash ${CALLOUT_CLASS[text]}`;
+      flash.className = `screen-flash ${CALLOUT_CLASS[text]}${win ? ' win' : ''}`;
       document.body.append(flash);
-      setTimeout(() => flash.remove(), 900);
+      setTimeout(() => flash.remove(), win ? 1300 : 900);
       const table = $('table');
-      table.classList.remove('shake');
+      const shake = win ? 'shake-hard' : 'shake';
+      table.classList.remove('shake', 'shake-hard');
       void table.offsetWidth;   // 애니메이션 다시 시작
-      table.classList.add('shake');
-      setTimeout(() => table.classList.remove('shake'), 700);
+      table.classList.add(shake);
+      setTimeout(() => table.classList.remove(shake), win ? 950 : 600);
     }
     // 빛 고리(::before)가 먼저 끝나도 글자는 남겨 두고, 애니메이션이 멈춘 환경에서도 결국 지운다
     el.addEventListener('animationend', (e) => { if (!e.pseudoElement) el.remove(); });
-    setTimeout(() => el.remove(), 1600);
+    setTimeout(() => el.remove(), win ? 1900 : 1600);
   }
 
   // ---------- 저장 (브라우저별) ----------
@@ -1540,7 +1551,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=52');
+    worker = new Worker('sim.js?v=55');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
