@@ -1596,7 +1596,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=69');
+    worker = new Worker('sim.js?v=70');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1920,8 +1920,16 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
   }
+  // 설명 말풍선은 버튼마다 세션(탭)당 한 번만. 다시 보려면 "?" 버튼
+  const toastSeen = (() => { try { return new Set(JSON.parse(sessionStorage.getItem('mj-toast-seen') || '[]')); } catch { return new Set(); } })();
+  function toastOnce(id) {
+    if (toastSeen.has(id)) return;
+    toastSeen.add(id);
+    try { sessionStorage.setItem('mj-toast-seen', JSON.stringify([...toastSeen])); } catch { /* 저장 불가 환경 */ }
+    showToast(id);
+  }
   // 버튼 자체의 켜기/끄기 처리가 끝난 뒤의 상태를 읽도록 한 박자 늦게
-  for (const id of Object.keys(HELP)) $(id).addEventListener('click', () => setTimeout(() => showToast(id), 0));
+  for (const id of Object.keys(HELP)) $(id).addEventListener('click', () => setTimeout(() => toastOnce(id), 0));
   $('btnHelp').addEventListener('click', () => {
     const list = $('helpList');
     list.innerHTML = '';
