@@ -1445,7 +1445,7 @@
         const t = typeOf(id);
         const info = document.createElement('span');
         info.className = 'tile-info';
-        info.append(Object.assign(document.createElement('span'), { className: 'left', textContent: `남은 ${Math.max(0, 4 - vis[t])}` }));
+        info.append(Object.assign(document.createElement('span'), { className: 'left', textContent: `잔여 ${Math.max(0, 4 - vis[t])}장` }));
         if (risk) {
           info.append(Object.assign(document.createElement('span'), { className: 'risk ' + riskClass(risk[t]), textContent: riskText(risk[t]) }));
           el.dataset.risk = riskClass(risk[t]);   // 드래그할 때 테두리 색
@@ -1596,7 +1596,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=70');
+    worker = new Worker('sim.js?v=71');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1796,7 +1796,7 @@
     const furiten = furitenDiscards();
     const vis = visibleCounts();
     const risk = riskByType(vis);
-    table.innerHTML = '<tr><th>버림</th><th>결과</th><th>유효패</th><th></th><th>남은</th>' + (risk ? '<th>위험</th>' : '') + '</tr>';
+    table.innerHTML = '<tr><th>버림</th><th>결과</th><th>유효패</th><th></th><th>잔여</th>' + (risk ? '<th>위험</th>' : '') + '</tr>';
     if (!opts.length) return;
     const best = opts[0];
     for (const o of opts) {
@@ -1903,8 +1903,8 @@
   });
   // ---------- 버튼 설명: 켜고 끌 때 말풍선 + "?" 도움말 ----------
   const HELP = {
-    btnHint: { name: '힌트', icon: '📋', desc: '아래에 타패 후보별 샹텐·유효패 종류와 남은 장수 표를 보여줘요.' },
-    btnDanger: { name: '위험도', icon: '⚠️', desc: '손패에 마우스를 올리거나 끌 때 그 패의 남은 장수와 방총 위험률을 보여줘요. 폰은 한 번 눌러 선택하면 보여요 (같은 패를 한 번 더 누르면 버림).' },
+    btnHint: { name: '힌트', icon: '📋', desc: '아래에 타패 후보별 샹텐·유효패 종류와 잔여 장수 표를 보여줘요.' },
+    btnDanger: { name: '위험도', icon: '⚠️', desc: '손패에 마우스를 올리거나 끌 때 그 패의 잔여 장수(아직 안 보이는 장수)와 방총 위험률을 보여줘요. 폰은 한 번 눌러 선택하면 보여요 (같은 패를 한 번 더 누르면 버림).' },
     btnJudge: { name: '기대값', icon: '🎯', desc: '울기·리치를 할 수 있을 때, 선택지마다 화료율과 기대점수를 시뮬레이션해서 추천해요. 계산이 무거워서 따로 켜요.' },
     btnAskCalls: { name: '울기', icon: '🀄', desc: '끄면 퐁·치·깡을 묻지 않고 넘겨요. 론은 항상 물어봐요.' },
   };
