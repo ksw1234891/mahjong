@@ -1616,7 +1616,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=73');
+    worker = new Worker('sim.js?v=74');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1921,35 +1921,13 @@
     save('mj-judge', pressed('btnJudge'));
     renderAnalysis();
   });
-  // ---------- 버튼 설명: 켜고 끌 때 말풍선 + "?" 도움말 ----------
+  // ---------- 버튼 설명: "?" 도움말 (버튼을 눌러도 따로 말풍선은 띄우지 않는다) ----------
   const HELP = {
     btnHint: { name: '힌트', icon: '📋', desc: '아래에 타패 후보별 샹텐·유효패 종류와 잔여 장수 표를 보여줘요.' },
     btnDanger: { name: '위험도', icon: '⚠️', desc: '손패에 마우스를 올리거나 끌 때 그 패의 잔여 장수(아직 안 보이는 장수)와 방총 위험률을 보여줘요. 폰은 한 번 눌러 선택하면 보여요 (같은 패를 한 번 더 누르면 버림).' },
     btnJudge: { name: '기대값', icon: '🎯', desc: '울기·리치를 할 수 있을 때, 선택지마다 화료율과 기대점수를 시뮬레이션해서 추천해요. 계산이 무거워서 따로 켜요.' },
     btnAskCalls: { name: '울기', icon: '🀄', desc: '끄면 퐁·치·깡을 묻지 않고 넘겨요. 론은 항상 물어봐요.' },
   };
-  let toastTimer = null;
-  function showToast(id) {
-    const h = HELP[id];
-    const on = pressed(id);
-    const t = $('toast');
-    t.innerHTML = `<span class="state ${on ? 'on' : 'off'}">${h.name} ${on ? '켬' : '끔'}</span><span>${h.desc}</span>`;
-    t.classList.remove('show');
-    void t.offsetWidth;   // 애니메이션 다시 시작
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
-  }
-  // 설명 말풍선은 버튼마다 세션(탭)당 한 번만. 다시 보려면 "?" 버튼
-  const toastSeen = (() => { try { return new Set(JSON.parse(sessionStorage.getItem('mj-toast-seen') || '[]')); } catch { return new Set(); } })();
-  function toastOnce(id) {
-    if (toastSeen.has(id)) return;
-    toastSeen.add(id);
-    try { sessionStorage.setItem('mj-toast-seen', JSON.stringify([...toastSeen])); } catch { /* 저장 불가 환경 */ }
-    showToast(id);
-  }
-  // 버튼 자체의 켜기/끄기 처리가 끝난 뒤의 상태를 읽도록 한 박자 늦게
-  for (const id of Object.keys(HELP)) $(id).addEventListener('click', () => setTimeout(() => toastOnce(id), 0));
   $('btnHelp').addEventListener('click', () => {
     const list = $('helpList');
     list.innerHTML = '';
