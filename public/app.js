@@ -1328,7 +1328,22 @@
       (stats.matches ? ` · 대국 ${stats.matches}회 (평균 ${(stats.rankSum / stats.matches).toFixed(2)}위, 1위 ${stats.firsts || 0}회)` : '');
   }
 
+  // 터치 기기 + 힌트를 켰을 때: 한 번 누르면 선택(확률 표시), 같은 패를 한 번 더 누르면 버리기
+  const TOUCH = window.matchMedia('(hover: none)').matches;
+  let selectedId = null;
+  function tapTile(id) {
+    if (!(TOUCH && pressed('btnHint')) || selectedId === id) {
+      selectedId = null;
+      return discard(id);
+    }
+    selectedId = id;
+    for (const b of document.querySelectorAll('#hand button.tile')) b.classList.toggle('selected', b.dataset.id == id);
+    highlightHint(typeOf(id));
+  }
+
   function renderHand() {
+    // 차례가 바뀌면 선택 해제
+    if (S.phase !== 'self' || !handIds().includes(selectedId)) selectedId = null;
     const box = $('hand');
     box.innerHTML = '';
     const glow = S.riichiSelect ? riichiDiscardTypes() : null;
@@ -1352,7 +1367,9 @@
       if (glow && !el.disabled) el.classList.add('glow');
       if (S.banned && S.banned.has(typeOf(id)) && el.disabled) el.classList.add('banned');
       el.dataset.type = typeOf(id);
-      el.addEventListener('click', () => discard(id));
+      el.dataset.id = id;
+      if (id === selectedId) el.classList.add('selected');
+      el.addEventListener('click', () => tapTile(id));
       el.addEventListener('mouseenter', () => highlightHint(typeOf(id)));
       el.addEventListener('mouseleave', () => highlightHint(null));
       box.append(el);
@@ -1471,7 +1488,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=38');
+    worker = new Worker('sim.js?v=41');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
