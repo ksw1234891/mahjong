@@ -278,7 +278,7 @@ button.ghost { background: transparent; }
   display: block; position: relative; z-index: 2; padding: 0; border: 0; box-shadow: none; background: none;
   font-size: clamp(3rem, 12vw, 6rem) !important; font-weight: 900; letter-spacing: 0.14em; line-height: 1; white-space: nowrap;
   /* 금속 느낌 그라데이션 글자. 외곽선은 drop-shadow로 (한글 text-stroke는 구겨져 보임) */
-  background-image: linear-gradient(180deg, #ffffff 0%, var(--c1) 38%, var(--c2) 62%, #5a1600 100%);
+  background-image: linear-gradient(180deg, #ffffff 0%, var(--c1) 35%, var(--c2) 70%, color-mix(in srgb, var(--c2) 70%, #000) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
   filter: drop-shadow(0 3px 0 #1a0600) drop-shadow(0 0 2px #1a0600) drop-shadow(0 0 22px var(--glow)) drop-shadow(0 0 48px var(--glow));
   animation: none; backdrop-filter: none;
@@ -318,8 +318,8 @@ button.ghost { background: transparent; }
   11%  { opacity: 1; transform: translate(-50%, -50%) scale(0.82, 1.12) rotate(0); filter: blur(0); }
   17%  { transform: translate(-50%, -50%) scale(1.16, 0.9); }
   23%  { transform: translate(-50%, -50%) scale(0.96, 1.04); }
-  29%  { transform: translate(-50%, -50%) scale(1); }
-  78%  { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
+  29%  { transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+  78%  { opacity: 1; transform: translate(-50%, -50%) scale(1.02); filter: blur(0); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.25); filter: blur(4px); }
 }
 @keyframes slash-in {
@@ -366,8 +366,8 @@ button.ghost { background: transparent; }
   15%  { transform: translate(-50%, -50%) scale(1.24, 0.84); }
   21%  { transform: translate(-50%, -50%) scale(0.93, 1.07); }
   27%  { transform: translate(-50%, -50%) scale(1.05, 0.97); }
-  33%  { transform: translate(-50%, -50%) scale(1); }
-  80%  { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+  33%  { transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+  80%  { opacity: 1; transform: translate(-50%, -50%) scale(1.03); filter: blur(0); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); filter: blur(5px); }
 }
 
@@ -555,6 +555,45 @@ button.tile.glow { box-shadow: 0 0 0 3px var(--accent), 0 calc(var(--w) * 0.07) 
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 
+
+/* ---------- 버튼 설명: 말풍선 + 도움말 ---------- */
+.actions { position: relative; }
+.help-btn {
+  width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 50%;
+  font-weight: 800; font-size: 1rem;
+}
+.toast {
+  position: absolute; left: 50%; bottom: calc(100% + 10px); z-index: 70;
+  width: min(420px, calc(100vw - 32px)); padding: 10px 14px; border-radius: 12px;
+  display: grid; gap: 4px; font-size: 0.88rem; line-height: 1.4; color: var(--text);
+  background: rgba(16, 24, 20, 0.96); border: 1px solid rgba(242, 193, 78, .55);
+  box-shadow: 0 10px 28px rgba(0,0,0,.5);
+  opacity: 0; pointer-events: none; transform: translate(-50%, 8px);
+  transition: opacity .2s, transform .2s;
+}
+.toast::after {
+  content: ""; position: absolute; left: 50%; top: 100%; margin-left: -8px;
+  border: 8px solid transparent; border-top-color: rgba(242, 193, 78, .55);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast .state { font-weight: 800; }
+.toast .state.on { color: var(--accent); }
+.toast .state.off { color: var(--muted); }
+.help-dialog {
+  border: none; border-radius: 16px; padding: 0; background: #1b2b24; color: var(--text);
+  width: min(460px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.help-dialog::backdrop { background: rgba(0,0,0,.55); }
+.help-body { padding: 18px 16px; display: grid; gap: 12px; }
+.help-body h2 { margin: 0; font-size: 1.15rem; color: var(--accent); }
+#helpList { display: grid; gap: 10px; }
+.help-item { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.05); }
+.help-item .ic { font-size: 1.3rem; line-height: 1.2; text-align: center; }
+.help-item b { font-size: 0.95rem; }
+.help-item .st { margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+.help-item .st.on { background: var(--accent); color: var(--accent-text); }
+.help-item .st.off { background: rgba(255,255,255,.12); color: var(--muted); }
+.help-item p { margin: 4px 0 0; font-size: 0.85rem; line-height: 1.45; color: #d8e2dc; }
 
 /* ---------- 힌트 ---------- */
 .hint table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }

@@ -1565,7 +1565,7 @@
   // ---------- 울기 / 리치 판단 (sim.js 워커에서 시뮬레이션) ----------
   let worker = null;
   try {
-    worker = new Worker('sim.js?v=60');
+    worker = new Worker('sim.js?v=62');
     worker.onmessage = ({ data }) => {
       if (data.id !== A.id) return;
       Object.assign(A, { results: data.results, n: data.n, done: data.done });
@@ -1870,6 +1870,46 @@
     save('mj-judge', pressed('btnJudge'));
     renderAnalysis();
   });
+  // ---------- 버튼 설명: 켜고 끌 때 말풍선 + "?" 도움말 ----------
+  const HELP = {
+    btnHint: { name: '힌트', icon: '📋', desc: '아래에 타패 후보별 샹텐·유효패 종류와 남은 장수 표를 보여줘요.' },
+    btnDanger: { name: '위험도', icon: '⚠️', desc: '손패에 마우스를 올리거나 끌 때 그 패의 남은 장수와 방총 위험률을 보여줘요. 폰은 한 번 눌러 선택하면 보여요 (같은 패를 한 번 더 누르면 버림).' },
+    btnJudge: { name: '기대값', icon: '🎯', desc: '울기·리치를 할 수 있을 때, 선택지마다 화료율과 기대점수를 시뮬레이션해서 추천해요. 계산이 무거워서 따로 켜요.' },
+    btnAskCalls: { name: '울기', icon: '🀄', desc: '끄면 퐁·치·깡을 묻지 않고 넘겨요. 론은 항상 물어봐요.' },
+  };
+  let toastTimer = null;
+  function showToast(id) {
+    const h = HELP[id];
+    const on = pressed(id);
+    const t = $('toast');
+    t.innerHTML = `<span class="state ${on ? 'on' : 'off'}">${h.name} ${on ? '켬' : '끔'}</span><span>${h.desc}</span>`;
+    t.classList.remove('show');
+    void t.offsetWidth;   // 애니메이션 다시 시작
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+  // 버튼 자체의 켜기/끄기 처리가 끝난 뒤의 상태를 읽도록 한 박자 늦게
+  for (const id of Object.keys(HELP)) $(id).addEventListener('click', () => setTimeout(() => showToast(id), 0));
+  $('btnHelp').addEventListener('click', () => {
+    const list = $('helpList');
+    list.innerHTML = '';
+    const rows = [
+      ...Object.entries(HELP).map(([id, h]) => ({ ...h, state: pressed(id) ? '켜짐' : '꺼짐' })),
+      { name: '쯔모 · 리치 · 깡', icon: '✨', desc: '할 수 있을 때만 테이블 위에 떠요.' },
+      { name: '버리기', icon: '👆', desc: '패를 클릭하거나, 위로 끌어올렸다 놓아도 버려져요.' },
+    ];
+    for (const r of rows) {
+      const item = document.createElement('div');
+      item.className = 'help-item';
+      item.innerHTML = `<span class="ic">${r.icon}</span><div><b>${r.name}</b>${r.state ? `<span class="st ${r.state === '켜짐' ? 'on' : 'off'}">${r.state}</span>` : ''}<p>${r.desc}</p></div>`;
+      list.append(item);
+    }
+    $('helpDialog').showModal();
+  });
+  $('btnHelpClose').addEventListener('click', () => $('helpDialog').close());
+  $('helpDialog').addEventListener('click', (e) => { if (e.target === $('helpDialog')) $('helpDialog').close(); });
+
   // 모바일: 설정 메뉴 열고 닫기
   $('btnMenu').addEventListener('click', () => {
     const open = !document.querySelector('.bar').classList.contains('open');
